@@ -11,11 +11,6 @@ def get_gemini_client():
     return genai.Client(api_key=os.getenv('GEMINI_API_KEY'))
 
 def generate_session_summary(session_id):
-    """
-    Generate a summary for an entire parliament session.
-    Aggregates all section summaries and creates a high-level briefing.
-    """
-    # Fetch session info and all section summaries
     sections = execute_query(
         '''SELECT s.section_type, s.section_title, s.summary, m.acronym as ministry
            FROM sections s
@@ -30,7 +25,6 @@ def generate_session_summary(session_id):
         print(f"No sections found for session {session_id}")
         return None
     
-    # Build context for AI
     section_summaries = []
     for s in sections:
         ministry_tag = f"[{s['ministry']}] " if s['ministry'] else ""
@@ -53,7 +47,6 @@ def generate_session_summary(session_id):
         )
         summary = response.text.strip()
         
-        # Update session with summary
         execute_query(
             'UPDATE sessions SET summary = %s WHERE id = %s',
             (summary, session_id)
@@ -66,10 +59,6 @@ def generate_session_summary(session_id):
         return None
 
 def generate_member_summary(member_id):
-    """
-    Generate an aggregate summary/profile for a member based on their parliamentary activity.
-    """
-    # Fetch member info
     member = execute_query(
         'SELECT name FROM members WHERE id = %s',
         (member_id,),
@@ -81,7 +70,6 @@ def generate_member_summary(member_id):
     
     member_name = member[0]['name']
     
-    # Fetch recent activity (sections they spoke in)
     activity = execute_query(
         '''SELECT s.section_title, s.summary, s.section_type, m.acronym as ministry,
                   ss.designation, sess.date
@@ -90,8 +78,7 @@ def generate_member_summary(member_id):
            JOIN sessions sess ON s.session_id = sess.id
            LEFT JOIN ministries m ON s.ministry_id = m.id
            WHERE ss.member_id = %s
-           ORDER BY sess.date DESC
-           LIMIT 20''',
+           ORDER BY sess.date DESC''',
         (member_id,),
         fetch=True
     )
@@ -100,10 +87,8 @@ def generate_member_summary(member_id):
         print(f"No activity found for member {member_name}")
         return None
     
-    # Get most recent designation
     recent_designation = activity[0]['designation'] or "MP"
     
-    # Build context
     activity_lines = []
     for a in activity:
         ministry_tag = f"[{a['ministry']}] " if a['ministry'] else ""

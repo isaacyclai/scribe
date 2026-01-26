@@ -1,11 +1,8 @@
-# python/process_hansard.py
 import sys
-import time
 
 from db import execute_query, find_or_create_member, find_ministry_by_acronym, add_section_speaker
 from hansard_api import HansardAPI
 
-# Mapping from designation keywords to ministry acronyms
 DESIGNATION_TO_MINISTRY = {
     'prime minister': 'PMO',
     'culture': 'MCCY', 'community': 'MCCY', 'youth': 'MCCY',
@@ -27,7 +24,6 @@ DESIGNATION_TO_MINISTRY = {
 }
 
 def detect_ministry_from_designation(designation):
-    """Attempt to extract ministry acronym from a designation string."""
     if not designation:
         return None
     designation_lower = designation.lower()
@@ -37,7 +33,6 @@ def detect_ministry_from_designation(designation):
     return None
 
 def detect_ministry_from_speakers(speakers):
-    """Check all speakers for a minister and return their ministry."""
     for speaker in speakers:
         designation = getattr(speaker, 'appointment', None)
         if designation and 'minister' in designation.lower():
@@ -59,7 +54,6 @@ def process_hansard_by_date(date_str: str):
         print('No data found for this date')
         return
     
-    # 2. Parse sections
     sections = parliament_session.get_sections()
     metadata = parliament_session.get_metadata()
     print(f'   Found {len(sections)} question sections')
@@ -68,7 +62,7 @@ def process_hansard_by_date(date_str: str):
         print('No question sections to process')
         return
     
-    # 3. Create session
+    # 2. Create session
     print('2. Creating session in Supabase...')
     session_result = execute_query(
         '''INSERT INTO sessions (date, sitting_no, parliament, session_no, volume_no, format, url)
@@ -89,7 +83,7 @@ def process_hansard_by_date(date_str: str):
     session_id = session_result[0]['id']
     print(f'   Session ID: {session_id}')
     
-    # 4. Process each section
+    # 3. Process each section
     print('3. Inserting sections...')
     processed = 0
 
@@ -100,15 +94,12 @@ def process_hansard_by_date(date_str: str):
         print(f'   [{idx+1}/{len(sections)}] {section["title"][:50]}...')
         print(f'      Speakers: {", ".join(speaker_names[:3])}{"..." if len(speaker_names) > 3 else ""}')
         
-        # Detect ministry from speakers (check for ministers)
         ministry_acronym = detect_ministry_from_speakers(speakers)
         if ministry_acronym:
             print(f'      Ministry: {ministry_acronym}')
         
-        # Find ministry UUID
         ministry_id = find_ministry_by_acronym(ministry_acronym) if ministry_acronym else None
         
-        # Insert section (no summary/tags - those are generated at session/member level)
         section_result = execute_query(
             '''INSERT INTO sections 
                (session_id, ministry_id, section_type, section_title, 
@@ -129,7 +120,6 @@ def process_hansard_by_date(date_str: str):
         
         section_id = section_result[0]['id']
         
-        # Link all speakers with their point-in-time details
         for speaker in speakers:
             member_id = find_or_create_member(speaker.name)
             add_section_speaker(

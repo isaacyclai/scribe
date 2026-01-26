@@ -1,4 +1,3 @@
-# python/hansard_api.py (UPDATED - Extract metadata from HTML)
 import requests
 from datetime import datetime
 from typing import List, Dict, Optional, Set
