@@ -27,50 +27,24 @@ class MP:
         return f"MP ({self.name}, {self.constituency}, {self.appointment})"
 
 
-class Section:
-    def __init__(
-        self,
-        section_type: str,
-        title: str,
-        speakers: List[MP],
-        content_html: str,
-        content_plain: str,
-        order: int
-    ):
-        self.section_type = section_type
-        self.title = title
-        self.speakers = speakers
-        self.content_html = content_html
-        self.content_plain = content_plain
-        self.order = order
-    
-    def __repr__(self):
-        speaker_names = [s.name for s in self.speakers]
-        return f"Section({self.section_type}, '{self.title[:40]}...', speakers={speaker_names})"
-
-
 class ParliamentSession:
-    data: str
-    sitting_no: int
-    parliament: int
-    session_no: int
-    volume_no: int
+    metadata: dict
     present_members: List[MP]
     absent_members: List[MP]
-    sections: List[Section]
+    sections: List[Dict]
 
     def __init__(self, date: str):
-        self.date = date
+        self.metadata = {"date": date, "sitting_no": None, "parliament": None, "session_no": None, "volume_no": None}
         self.present_members = []
         self.absent_members = []
         self.sections = []
         self._mp_name_index: Dict[str, MP] = {}  # Cache for name lookups
 
     def set_metadata(self, metadata: Dict):
-        self.sitting_no = metadata["sitting_no"]
-        self.parliament = metadata["parliament"]
-        self.session_no = metadata["session_no"]
-        self.volume_no = metadata["volume_no"]
+        self.metadata["sitting_no"] = metadata["sitting_no"]
+        self.metadata["parliament"] = metadata["parliament"]
+        self.metadata["session_no"] = metadata["session_no"]
+        self.metadata["volume_no"] = metadata["volume_no"]
 
     def set_attendance(self, attendanceList: List[Dict]):
         present = filter(lambda x: x['attendance'], attendanceList)
@@ -234,14 +208,20 @@ class ParliamentSession:
             content_display = clean_html_for_display(content_html)
             content_plain = strip_all_html(content_html)
             
-            self.sections.append(Section(
-                section_type=section_type,
-                title=title,
-                speakers=matched_speakers,
-                content_html=content_display,
-                content_plain=content_plain,
-                order=idx
-            ))
+            self.sections.append({
+                "section_type": section_type,
+                "title": title,
+                "speakers": matched_speakers,
+                "content_html": content_display,
+                "content_plain": content_plain,
+                "order": idx
+            })
+
+    def get_sections(self):
+        return self.sections
+    
+    def get_metadata(self):
+        return self.metadata
     
     def print_attendance(self):
         print("Attendance for session on", self.date)
@@ -253,11 +233,11 @@ class ParliamentSession:
             print(mp.get_details())
 
     def print_sections(self):
-        print(f"\nSections for session on {self.date}:")
+        print(f"\nSections for session on {self.metadata['date']}:")
         print(f"Total: {len(self.sections)} question sections\n")
         for section in self.sections:
-            print(f"--- {section.section_type}: {section.title[:60]}... ---")
-            print(f"Speakers ({len(section.speakers)}):")
-            for speaker in section.speakers:
+            print(f"--- {section['section_type']}: {section['title'][:60]}... ---")
+            print(f"Speakers ({len(section['speakers'])}):")
+            for speaker in section['speakers']:
                 print(f"  - {speaker.name} ({speaker.constituency})")
             print()

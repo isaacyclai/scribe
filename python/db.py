@@ -40,27 +40,31 @@ def find_or_create_member(name):
     )
     return result[0]['id']
 
-def find_or_create_topic(title, category='General'):
+def find_ministry_by_acronym(acronym):
+    """Find ministry by acronym (e.g., 'MOH'). Returns UUID or None."""
     result = execute_query(
-        'SELECT id FROM topics WHERE title = %s',
-        (title,),
+        'SELECT id FROM ministries WHERE acronym = %s',
+        (acronym,),
         fetch=True
     )
-    
-    if result:
-        return result[0]['id']
-    
-    result = execute_query(
-        'INSERT INTO topics (title, category) VALUES (%s, %s) RETURNING id',
-        (title, category),
-        fetch=True
+    return result[0]['id'] if result else None
+
+def add_section_speaker(section_id, member_id, constituency=None, designation=None):
+    """Link a speaker to a section with their point-in-time details."""
+    execute_query(
+        '''INSERT INTO section_speakers (section_id, member_id, constituency, designation)
+           VALUES (%s, %s, %s, %s)''',
+        (section_id, member_id, constituency, designation)
     )
-    return result[0]['id']
 
 if __name__ == '__main__':
     try:
         result = execute_query('SELECT NOW()', fetch=True)
         print('Connected to Supabase')
         print(f'Current time: {result[0]["now"]}')
+        
+        # Test ministry lookup
+        moh = find_ministry_by_acronym('MOH')
+        print(f'MOH ministry id: {moh}')
     except Exception as e:
         print(f'Connection failed: {e}')
