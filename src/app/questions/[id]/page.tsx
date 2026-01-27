@@ -141,7 +141,7 @@ export default function QuestionDetailPage({
                         Full Transcript
                     </h2>
                     <div
-                        className="prose prose-zinc max-w-none dark:prose-invert prose-p:my-2 prose-p:leading-relaxed"
+                        className="transcript-content prose prose-zinc max-w-none dark:prose-invert"
                         dangerouslySetInnerHTML={{ __html: question.contentHtml }}
                     />
                 </section>

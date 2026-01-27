@@ -57,9 +57,16 @@ export default function QuestionCard({
                 {question.sectionTitle}
             </h3>
             {showContent && (
-                <p className="mb-3 line-clamp-3 text-sm text-zinc-600 dark:text-zinc-400">
-                    {question.contentPlain.slice(0, 250)}...
-                </p>
+                <div className="mb-3 line-clamp-6 space-y-2 text-sm text-zinc-600 dark:text-zinc-400">
+                    {question.contentPlain
+                        .slice(0, 500)
+                        .split(/\n\n+/)
+                        .filter(p => p.trim())
+                        .slice(0, 3)
+                        .map((paragraph, i) => (
+                            <p key={i}>{paragraph.trim()}</p>
+                        ))}
+                </div>
             )}
             {showSpeakers && speakerNames.length > 0 && (
                 <div className="flex flex-wrap gap-1">
