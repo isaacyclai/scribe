@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import ThemeToggle from './ThemeToggle'
 
 export default function Navbar() {
     const pathname = usePathname()
@@ -19,7 +20,7 @@ export default function Navbar() {
                 <Link href="/" className="text-xl font-bold text-zinc-900 dark:text-white">
                     🇸🇬 Parliament
                 </Link>
-                <div className="flex gap-6">
+                <div className="flex items-center gap-6">
                     {navLinks.map((link) => (
                         <Link
                             key={link.href}
@@ -32,6 +33,7 @@ export default function Navbar() {
                             {link.label}
                         </Link>
                     ))}
+                    <ThemeToggle />
                 </div>
             </div>
         </nav>

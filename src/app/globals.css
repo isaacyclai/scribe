@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -12,8 +14,21 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* Class-based dark mode takes priority */
+:root.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+}
+
+/* Light mode class override */
+:root.light {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+/* Only use system preference when no explicit class is set */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not(.light):not(.dark) {
     --background: #0a0a0a;
     --foreground: #ededed;
   }
@@ -30,6 +45,6 @@ body {
   margin-bottom: 1rem;
 }
 
-.transcript-content p + p {
+.transcript-content p+p {
   margin-top: 1rem;
 }
