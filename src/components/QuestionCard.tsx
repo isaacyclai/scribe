@@ -24,7 +24,10 @@ export default function QuestionCard({
     showDate = true
 }: QuestionCardProps) {
     const speakerNames = Array.isArray(question.speakers)
-        ? question.speakers.map((s) => (typeof s === 'string' ? s : s.name))
+        ? question.speakers
+            .filter((s): s is NonNullable<typeof s> => s != null)
+            .map((s) => (typeof s === 'string' ? s : s.name))
+            .filter((name): name is string => name != null)
         : []
 
     const typeLabel = QUESTION_TYPE_LABELS[question.sectionType] || question.sectionType
