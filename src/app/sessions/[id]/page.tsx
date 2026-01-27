@@ -5,6 +5,13 @@ import Link from 'next/link'
 import QuestionCard from '@/components/QuestionCard'
 import type { Section } from '@/types'
 
+// Helper to format ordinal numbers (1st, 2nd, 3rd, etc.)
+function getOrdinal(n: number): string {
+    const s = ['th', 'st', 'nd', 'rd']
+    const v = n % 100
+    return n + (s[(v - 20) % 10] || s[v] || s[0])
+}
+
 interface SessionDetail {
     id: string
     date: string
@@ -79,11 +86,11 @@ export default function SessionDetailPage({
                     })}
                 </h1>
                 <div className="flex flex-wrap gap-3 text-sm text-zinc-600 dark:text-zinc-400">
-                    <span>Parliament {session.parliament}</span>
+                    <span>{getOrdinal(session.parliament)} Parliament</span>
                     <span>•</span>
-                    <span>Session {session.sessionNo}</span>
+                    <span>{getOrdinal(session.sessionNo)} Session</span>
                     <span>•</span>
-                    <span>Sitting {session.sittingNo}</span>
+                    <span>{getOrdinal(session.sittingNo)} Sitting</span>
                     {session.url && (
                         <>
                             <span>•</span>
