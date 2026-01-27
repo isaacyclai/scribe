@@ -8,11 +8,12 @@ from util import parse_mp_name, extract_name_from_speaker_text, clean_html_for_d
 # WANA: Written Answer to Oral Question not answered by end of Question Time
 # WA: Written Answer
 # OS: Oral Statement
-# BP: Bill
 # WS: Written Statement
-# BI: Bill 
+# BP: Second Reading of Bill
+# BI: First Reading of Bill 
 QUESTION_SECTION_TYPES = {'OA', 'WA', 'WANA'}
-
+BILL_TYPES = {'BI', 'BP'}
+OTHER_TYPES = {'OS'}
 
 class MP:
     def __init__(self, name: str, constituency: str, appointment: str = None):
@@ -182,10 +183,13 @@ class ParliamentSession:
     def set_sections(self, raw_sections: List[Dict]):
         """
         Parse raw section data and store as Section objects with matched speakers.
+        Processes both questions (OA, WA, WANA) and bills (BI, BP).
         """
+        all_valid_types = QUESTION_SECTION_TYPES | BILL_TYPES
+        
         for idx, section in enumerate(raw_sections):
             section_type = section.get('sectionType')
-            if section_type not in QUESTION_SECTION_TYPES:
+            if section_type not in all_valid_types:
                 continue
             
             title = section.get('title', 'Untitled')
@@ -209,12 +213,15 @@ class ParliamentSession:
             content_plain = strip_all_html(content_html)
             
             # Construct source URL
-            # Format: https://sprs.parl.gov.sg/search/sprs3topic?reportid=<sectionId>
             section_id = section.get('sectionId')
             source_url = f"https://sprs.parl.gov.sg/search/sprs3topic?reportid={section_id}" if section_id else None
             
+            # Determine category
+            category = 'question' if section_type in QUESTION_SECTION_TYPES else 'bill'
+            
             self.sections.append({
                 "section_type": section_type,
+                "category": category,
                 "title": title,
                 "speakers": matched_speakers,
                 "content_html": content_display,

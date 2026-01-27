@@ -54,13 +54,24 @@ INSERT INTO ministries (name, acronym) VALUES
     ('Ministry of Transport', 'MOT'),
     ('Parliament of Singapore', 'PARL'); -- For Speaker, etc.
 
+-- Bills table: groups BI and BP sections by title
+CREATE TABLE bills (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    title VARCHAR(500) NOT NULL,
+    ministry_id UUID REFERENCES ministries(id),
+    first_reading_date DATE,
+    first_reading_session_id UUID REFERENCES sessions(id),
+    created_at TIMESTAMP DEFAULT NOW()
+);
 
--- Main table: one row per section (e.g., one parliamentary question)
+-- Main table: one row per section (e.g., one parliamentary question or bill)
 CREATE TABLE sections (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     session_id UUID REFERENCES sessions(id) ON DELETE CASCADE,
     ministry_id UUID REFERENCES ministries(id), -- Nullable if not applicable
-    section_type VARCHAR(50) NOT NULL, -- 'OA', 'WA', 'WANA', etc.
+    bill_id UUID REFERENCES bills(id), -- Links bill sections to parent bill
+    category VARCHAR(20) NOT NULL DEFAULT 'question', -- 'question' or 'bill'
+    section_type VARCHAR(50) NOT NULL, -- 'OA', 'WA', 'WANA', 'BI', 'BP', etc.
     section_title TEXT,
     content_html TEXT NOT NULL,
     content_plain TEXT NOT NULL,

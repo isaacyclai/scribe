@@ -21,8 +21,8 @@ export async function GET(
 
         const ministry = ministryResult.rows[0]
 
-        // Get sections under this ministry
-        const sectionsResult = await query(
+        // Get questions under this ministry (excluding bills)
+        const questionsResult = await query(
             `SELECT 
         s.id,
         s.section_type as "sectionType",
@@ -34,16 +34,32 @@ export async function GET(
        JOIN sessions sess ON s.session_id = sess.id
        LEFT JOIN section_speakers ss ON s.id = ss.section_id
        LEFT JOIN members mem ON ss.member_id = mem.id
-       WHERE s.ministry_id = $1
+       WHERE s.ministry_id = $1 AND s.section_type NOT IN ('BI', 'BP')
        GROUP BY s.id, s.section_type, s.section_title, s.content_plain, sess.date, s.section_order
        ORDER BY sess.date DESC, s.section_order ASC
        LIMIT 100`,
             [id]
         )
 
+        // Get bills under this ministry (BP sections with bill_id for linking)
+        const billsResult = await query(
+            `SELECT DISTINCT ON (s.bill_id)
+        s.bill_id as "billId",
+        s.section_type as "sectionType",
+        s.section_title as "sectionTitle",
+        sess.date as "sessionDate"
+       FROM sections s
+       JOIN sessions sess ON s.session_id = sess.id
+       WHERE s.ministry_id = $1 AND s.section_type = 'BP' AND s.bill_id IS NOT NULL
+       ORDER BY s.bill_id, sess.date DESC
+       LIMIT 50`,
+            [id]
+        )
+
         return NextResponse.json({
             ...ministry,
-            sections: sectionsResult.rows
+            questions: questionsResult.rows,
+            bills: billsResult.rows
         })
     } catch (error) {
         console.error('Database error:', error)

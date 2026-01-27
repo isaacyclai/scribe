@@ -5,13 +5,22 @@ import Link from 'next/link'
 import QuestionCard from '@/components/QuestionCard'
 import type { Section } from '@/types'
 
+interface Bill {
+    billId: string
+    sectionType: string
+    sectionTitle: string
+    ministry: string | null
+    sessionDate: string
+}
+
 interface MemberDetail {
     id: string
     name: string
     summary: string | null
     constituency: string | null
     designation: string | null
-    sections: Section[]
+    questions: Section[]
+    bills: Bill[]
 }
 
 export default function MemberDetailPage({
@@ -87,18 +96,56 @@ export default function MemberDetailPage({
                 )}
             </section>
 
+            {/* Bills Section */}
+            {member.bills && member.bills.length > 0 && (
+                <section className="mb-8">
+                    <h2 className="mb-4 text-xl font-semibold text-zinc-900 dark:text-white">
+                        Bills ({member.bills.length})
+                    </h2>
+                    <div className="grid gap-4 md:grid-cols-2">
+                        {member.bills.map((bill) => (
+                            <Link key={bill.billId} href={`/bills/${bill.billId}`}>
+                                <div className="group cursor-pointer rounded-lg border border-zinc-200 bg-white p-4 transition-all hover:border-purple-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-purple-700">
+                                    <div className="mb-2 flex flex-wrap items-center gap-2">
+                                        <span className="rounded bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+                                            Bill
+                                        </span>
+                                        {bill.ministry && (
+                                            <span className="rounded bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
+                                                {bill.ministry}
+                                            </span>
+                                        )}
+                                        <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                                            {new Date(bill.sessionDate).toLocaleDateString('en-SG', {
+                                                year: 'numeric',
+                                                month: 'short',
+                                                day: 'numeric',
+                                            })}
+                                        </span>
+                                    </div>
+                                    <h3 className="line-clamp-2 font-medium text-zinc-900 group-hover:text-purple-600 dark:text-white dark:group-hover:text-purple-400">
+                                        {bill.sectionTitle}
+                                    </h3>
+                                </div>
+                            </Link>
+                        ))}
+                    </div>
+                </section>
+            )}
+
+            {/* Questions Section */}
             <section>
                 <h2 className="mb-4 text-xl font-semibold text-zinc-900 dark:text-white">
-                    Parliamentary Questions ({member.sections.length})
+                    Parliamentary Questions ({member.questions?.length || 0})
                 </h2>
-                {member.sections.length === 0 ? (
+                {!member.questions || member.questions.length === 0 ? (
                     <p className="py-8 text-center text-zinc-500 dark:text-zinc-400">
                         No recorded questions
                     </p>
                 ) : (
                     <div className="grid gap-4 md:grid-cols-2">
-                        {member.sections.map((section) => (
-                            <QuestionCard key={section.id} question={section} showSpeakers={false} />
+                        {member.questions.map((question) => (
+                            <QuestionCard key={question.id} question={question} showSpeakers={false} />
                         ))}
                     </div>
                 )}

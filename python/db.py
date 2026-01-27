@@ -65,6 +65,47 @@ def add_session_attendance(session_id, member_id, present=True, constituency=Non
         (session_id, member_id, present, constituency, designation)
     )
 
+def find_or_create_bill(title, ministry_id=None, first_reading_date=None, first_reading_session_id=None):
+    """Find or create a bill by title. Updates first reading info if this is a first reading.
+    first_reading_date should be in DD-MM-YYYY format.
+    """
+    result = execute_query(
+        'SELECT id, first_reading_date, ministry_id FROM bills WHERE title = %s',
+        (title,),
+        fetch=True
+    )
+    
+    if result:
+        bill_id = result[0]['id']
+        existing_ministry = result[0]['ministry_id']
+        existing_first_reading = result[0]['first_reading_date']
+        
+        # Update ministry if not set
+        if ministry_id and not existing_ministry:
+            execute_query(
+                'UPDATE bills SET ministry_id = %s WHERE id = %s',
+                (ministry_id, bill_id)
+            )
+        
+        # Update first reading info if not set and this is a first reading
+        if first_reading_date and not existing_first_reading:
+            execute_query(
+                '''UPDATE bills SET first_reading_date = TO_DATE(%s, 'DD-MM-YYYY'), 
+                   first_reading_session_id = %s
+                   WHERE id = %s''',
+                (first_reading_date, first_reading_session_id, bill_id)
+            )
+        return bill_id
+    
+    # Create new bill
+    result = execute_query(
+        '''INSERT INTO bills (title, ministry_id, first_reading_date, first_reading_session_id)
+           VALUES (%s, %s, TO_DATE(%s, 'DD-MM-YYYY'), %s) RETURNING id''',
+        (title, ministry_id, first_reading_date, first_reading_session_id),
+        fetch=True
+    )
+    return result[0]['id']
+
 if __name__ == '__main__':
     try:
         result = execute_query('SELECT NOW()', fetch=True)

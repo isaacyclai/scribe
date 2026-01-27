@@ -48,3 +48,16 @@ body {
 .transcript-content p+p {
   margin-top: 1rem;
 }
+
+/* Procedural text from Hansard (e.g., "[Members stood]" or "[Sitting suspended]") */
+.transcript-content .proc {
+  display: block;
+  font-size: 0.875rem;
+  font-style: italic;
+  color: #6b7280;
+  margin: 0.5rem 0;
+}
+
+.dark .transcript-content .proc {
+  color: #9ca3af;
+}

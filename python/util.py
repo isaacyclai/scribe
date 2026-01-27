@@ -140,6 +140,19 @@ def clean_html_for_display(html_content: str) -> str:
     clean = clean.replace('&#39;', "'")
     clean = clean.replace('&quot;', '"')
     
+    # Convert [(proc text)...(proc text)] markers to styled spans
+    # Pattern: [(proc text) content (proc text)]
+    clean = re.sub(
+        r'\[\(proc text\)\s*(.*?)\s*\(proc text\)\]',
+        r'<span class="proc">\1</span>',
+        clean,
+        flags=re.DOTALL
+    )
+    
+    # Also handle standalone markers that might be malformed
+    clean = re.sub(r'\[\(proc text\)\s*', '<span class="proc">', clean)
+    clean = re.sub(r'\s*\(proc text\)\]', '</span>', clean)
+    
     # Keep <p>, <strong>, <br> tags for formatting
     # Remove other tags
     soup = BeautifulSoup(clean, 'html.parser')

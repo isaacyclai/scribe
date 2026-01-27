@@ -31,6 +31,14 @@ interface SessionDetail {
     url: string
     summary: string | null
     questions: Section[]
+    bills: Array<{
+        billId: string
+        sectionTitle: string
+        ministry: string | null
+        ministryId: string | null
+        readingTypes: string[]
+        sectionOrder: number
+    }>
     attendees: Attendee[]
 }
 
@@ -113,7 +121,7 @@ export default function SessionDetailPage({
                                 rel="noopener noreferrer"
                                 className="text-blue-600 hover:underline dark:text-blue-400"
                             >
-                                Official Record ↗
+                                Full report from Hansard ↗
                             </a>
                         </>
                     )}
@@ -205,6 +213,43 @@ export default function SessionDetailPage({
                             )}
                         </div>
                     )}
+                </section>
+            )}
+
+            {/* Bills */}
+            {session.bills && session.bills.length > 0 && (
+                <section className="mb-8">
+                    <h2 className="mb-4 text-xl font-semibold text-zinc-900 dark:text-white">
+                        Bills ({session.bills.length})
+                    </h2>
+                    <div className="grid gap-4 md:grid-cols-2">
+                        {session.bills.map((bill) => (
+                            <Link key={bill.billId} href={`/bills/${bill.billId}`}>
+                                <div className="group cursor-pointer rounded-lg border border-zinc-200 bg-white p-4 transition-all hover:border-purple-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-purple-700">
+                                    <div className="mb-2 flex flex-wrap items-center gap-2">
+                                        {bill.readingTypes?.includes('BI') && (
+                                            <span className="rounded bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+                                                1st Reading
+                                            </span>
+                                        )}
+                                        {bill.readingTypes?.includes('BP') && (
+                                            <span className="rounded bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+                                                2nd Reading
+                                            </span>
+                                        )}
+                                        {bill.ministry && (
+                                            <span className="rounded bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
+                                                {bill.ministry}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <h3 className="line-clamp-2 font-medium text-zinc-900 group-hover:text-purple-600 dark:text-white dark:group-hover:text-purple-400">
+                                        {bill.sectionTitle}
+                                    </h3>
+                                </div>
+                            </Link>
+                        ))}
+                    </div>
                 </section>
             )}
 

@@ -1,14 +1,23 @@
 'use client'
 
 import { useState, useEffect, use } from 'react'
+import Link from 'next/link'
 import QuestionCard from '@/components/QuestionCard'
 import type { Section } from '@/types'
+
+interface Bill {
+    billId: string
+    sectionType: string
+    sectionTitle: string
+    sessionDate: string
+}
 
 interface MinistryDetail {
     id: string
     name: string
     acronym: string
-    sections: Section[]
+    questions: Section[]
+    bills: Bill[]
 }
 
 export default function MinistryDetailPage({
@@ -55,6 +64,10 @@ export default function MinistryDetailPage({
 
     return (
         <div>
+            <Link href="/ministries" className="mb-6 inline-flex items-center text-sm text-blue-600 hover:underline dark:text-blue-400">
+                ← Back to Ministries
+            </Link>
+
             <section className="mb-8">
                 <div className="mb-2 flex items-center gap-2">
                     <span className="rounded bg-green-100 px-3 py-1 text-sm font-bold text-green-700 dark:bg-green-900/30 dark:text-green-400">
@@ -66,18 +79,51 @@ export default function MinistryDetailPage({
                 </h1>
             </section>
 
+            {/* Bills Section */}
+            {ministry.bills && ministry.bills.length > 0 && (
+                <section className="mb-8">
+                    <h2 className="mb-4 text-xl font-semibold text-zinc-900 dark:text-white">
+                        Bills ({ministry.bills.length})
+                    </h2>
+                    <div className="grid gap-4 md:grid-cols-2">
+                        {ministry.bills.map((bill) => (
+                            <Link key={bill.billId} href={`/bills/${bill.billId}`}>
+                                <div className="group cursor-pointer rounded-lg border border-zinc-200 bg-white p-4 transition-all hover:border-purple-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-purple-700">
+                                    <div className="mb-2 flex flex-wrap items-center gap-2">
+                                        <span className="rounded bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+                                            Bill
+                                        </span>
+                                        <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                                            {new Date(bill.sessionDate).toLocaleDateString('en-SG', {
+                                                year: 'numeric',
+                                                month: 'short',
+                                                day: 'numeric',
+                                            })}
+                                        </span>
+                                    </div>
+                                    <h3 className="line-clamp-2 font-medium text-zinc-900 group-hover:text-purple-600 dark:text-white dark:group-hover:text-purple-400">
+                                        {bill.sectionTitle}
+                                    </h3>
+                                </div>
+                            </Link>
+                        ))}
+                    </div>
+                </section>
+            )}
+
+            {/* Questions Section */}
             <section>
                 <h2 className="mb-4 text-xl font-semibold text-zinc-900 dark:text-white">
-                    Related Questions ({ministry.sections.length})
+                    Related Questions ({ministry.questions?.length || 0})
                 </h2>
-                {ministry.sections.length === 0 ? (
+                {!ministry.questions || ministry.questions.length === 0 ? (
                     <p className="py-8 text-center text-zinc-500 dark:text-zinc-400">
                         No questions found for this ministry
                     </p>
                 ) : (
                     <div className="grid gap-4 md:grid-cols-2">
-                        {ministry.sections.map((section) => (
-                            <QuestionCard key={section.id} question={section} />
+                        {ministry.questions.map((question) => (
+                            <QuestionCard key={question.id} question={question} />
                         ))}
                     </div>
                 )}

@@ -1,6 +1,6 @@
 import sys
 
-from db import execute_query, find_or_create_member, find_ministry_by_acronym, add_section_speaker, add_session_attendance
+from db import execute_query, find_or_create_member, find_ministry_by_acronym, add_section_speaker, add_session_attendance, find_or_create_bill
 from hansard_api import HansardAPI
 
 DESIGNATION_TO_MINISTRY = {
@@ -130,15 +130,33 @@ def process_hansard_by_date(date_str: str):
         
         ministry_id = find_ministry_by_acronym(ministry_acronym) if ministry_acronym else None
         
+        # Handle bill sections - create/find parent bill entity
+        bill_id = None
+        section_type = section['section_type']
+        if section_type in ('BI', 'BP'):
+            # For first reading (BI), set the first reading date
+            first_reading_date = metadata.get('date') if section_type == 'BI' else None
+            first_reading_session_id = session_id if section_type == 'BI' else None
+            
+            bill_id = find_or_create_bill(
+                title=section['title'],
+                ministry_id=ministry_id,
+                first_reading_date=first_reading_date,
+                first_reading_session_id=first_reading_session_id
+            )
+            print(f'      Bill ID: {bill_id}')
+        
         section_result = execute_query(
             '''INSERT INTO sections 
-               (session_id, ministry_id, section_type, section_title, 
+               (session_id, ministry_id, bill_id, category, section_type, section_title, 
                 content_html, content_plain, section_order, source_url)
-               VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                RETURNING id''',
             (
                 session_id,
                 ministry_id,
+                bill_id,
+                section.get('category', 'question'),
                 section['section_type'],
                 section['title'],
                 section['content_html'],
@@ -161,8 +179,8 @@ def process_hansard_by_date(date_str: str):
             )
         
         processed += 1
-
-        if processed == 25:
+        
+        if processed == 100:
             break
         
     print(f'Complete! Processed {processed} sections')

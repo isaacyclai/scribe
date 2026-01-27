@@ -39,7 +39,8 @@ export async function GET(request: NextRequest) {
     LEFT JOIN ministries m ON s.ministry_id = m.id
     LEFT JOIN section_speakers ss ON s.id = ss.section_id
     LEFT JOIN members mem ON ss.member_id = mem.id
-    WHERE 1=1
+    WHERE (s.category = 'question' OR s.category IS NULL)
+      AND s.section_type NOT IN ('BI', 'BP')
   `
 
   const params: (string | number)[] = []

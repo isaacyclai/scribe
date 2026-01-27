@@ -3,15 +3,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/db'
 
 export async function GET(
-    request: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
-    const { id } = await params
+  const { id } = await params
 
-    try {
-        // Get session info
-        const sessionResult = await query(
-            `SELECT 
+  try {
+    // Get session info
+    const sessionResult = await query(
+      `SELECT 
               id,
               date,
               sitting_no as "sittingNo",
@@ -23,18 +23,18 @@ export async function GET(
               summary
             FROM sessions 
             WHERE id = $1`,
-            [id]
-        )
+      [id]
+    )
 
-        if (sessionResult.rows.length === 0) {
-            return NextResponse.json({ error: 'Session not found' }, { status: 404 })
-        }
+    if (sessionResult.rows.length === 0) {
+      return NextResponse.json({ error: 'Session not found' }, { status: 404 })
+    }
 
-        const session = sessionResult.rows[0]
+    const session = sessionResult.rows[0]
 
-        // Get all questions in this session
-        const questionsResult = await query(
-            `SELECT 
+    // Get all questions in this session
+    const questionsResult = await query(
+      `SELECT 
               s.id,
               s.section_type as "sectionType",
               s.section_title as "sectionTitle",
@@ -55,15 +55,33 @@ export async function GET(
             LEFT JOIN ministries m ON s.ministry_id = m.id
             LEFT JOIN section_speakers ss ON s.id = ss.section_id
             LEFT JOIN members mem ON ss.member_id = mem.id
-            WHERE s.session_id = $1
+            WHERE s.session_id = $1 AND (s.category = 'question' OR s.category IS NULL)
             GROUP BY s.id, s.section_type, s.section_title, s.content_plain, s.section_order, m.acronym
             ORDER BY s.section_order ASC`,
-            [id]
-        )
+      [id]
+    )
 
-        // Get attendance for this session
-        const attendanceResult = await query(
-            `SELECT 
+    // Get unique bills in this session (grouped by bill_id)
+    const billsResult = await query(
+      `SELECT DISTINCT ON (b.id)
+              b.id as "billId",
+              b.title as "sectionTitle",
+              m.acronym as ministry,
+              m.id as "ministryId",
+              ARRAY_AGG(DISTINCT s.section_type ORDER BY s.section_type) as "readingTypes",
+              MIN(s.section_order) as "sectionOrder"
+            FROM sections s
+            JOIN bills b ON s.bill_id = b.id
+            LEFT JOIN ministries m ON b.ministry_id = m.id
+            WHERE s.session_id = $1 AND s.section_type IN ('BI', 'BP')
+            GROUP BY b.id, b.title, m.acronym, m.id
+            ORDER BY b.id, MIN(s.section_order) ASC`,
+      [id]
+    )
+
+    // Get attendance for this session
+    const attendanceResult = await query(
+      `SELECT 
               m.id,
               m.name,
               sa.present,
@@ -73,19 +91,20 @@ export async function GET(
             JOIN members m ON sa.member_id = m.id
             WHERE sa.session_id = $1
             ORDER BY sa.present DESC, m.name ASC`,
-            [id]
-        )
+      [id]
+    )
 
-        return NextResponse.json({
-            ...session,
-            questions: questionsResult.rows,
-            attendees: attendanceResult.rows
-        })
-    } catch (error) {
-        console.error('Database error:', error)
-        return NextResponse.json(
-            { error: 'Failed to fetch session' },
-            { status: 500 }
-        )
-    }
+    return NextResponse.json({
+      ...session,
+      questions: questionsResult.rows,
+      bills: billsResult.rows,
+      attendees: attendanceResult.rows
+    })
+  } catch (error) {
+    console.error('Database error:', error)
+    return NextResponse.json(
+      { error: 'Failed to fetch session' },
+      { status: 500 }
+    )
+  }
 }

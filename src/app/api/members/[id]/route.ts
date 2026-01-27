@@ -2,16 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/db'
 
 export async function GET(
-    request: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
-    const { id } = await params
+  const { id } = await params
 
-    try {
-        // Get member info with summary and most recent designation/constituency
-        // Check both section_speakers and session_attendance
-        const memberResult = await query(
-            `SELECT 
+  try {
+    // Get member info with summary and most recent designation/constituency
+    // Check both section_speakers and session_attendance
+    const memberResult = await query(
+      `SELECT 
               m.id, 
               m.name, 
               ms.summary,
@@ -56,18 +56,18 @@ export async function GET(
             FROM members m
             LEFT JOIN member_summaries ms ON m.id = ms.member_id
             WHERE m.id = $1`,
-            [id]
-        )
+      [id]
+    )
 
-        if (memberResult.rows.length === 0) {
-            return NextResponse.json({ error: 'Member not found' }, { status: 404 })
-        }
+    if (memberResult.rows.length === 0) {
+      return NextResponse.json({ error: 'Member not found' }, { status: 404 })
+    }
 
-        const member = memberResult.rows[0]
+    const member = memberResult.rows[0]
 
-        // Get sections this member spoke in
-        const sectionsResult = await query(
-            `SELECT 
+    // Get questions this member spoke in (excluding bills)
+    const questionsResult = await query(
+      `SELECT 
               s.id,
               s.section_type as "sectionType",
               s.section_title as "sectionTitle",
@@ -80,21 +80,40 @@ export async function GET(
             JOIN sections s ON ss.section_id = s.id
             JOIN sessions sess ON s.session_id = sess.id
             LEFT JOIN ministries m ON s.ministry_id = m.id
-            WHERE ss.member_id = $1
+            WHERE ss.member_id = $1 AND s.section_type NOT IN ('BI', 'BP')
             ORDER BY sess.date DESC, s.section_order ASC
             LIMIT 100`,
-            [id]
-        )
+      [id]
+    )
 
-        return NextResponse.json({
-            ...member,
-            sections: sectionsResult.rows
-        })
-    } catch (error) {
-        console.error('Database error:', error)
-        return NextResponse.json(
-            { error: 'Failed to fetch member' },
-            { status: 500 }
-        )
-    }
+    // Get bills this member is involved in (BP sections only, with bill_id for linking)
+    const billsResult = await query(
+      `SELECT DISTINCT ON (s.bill_id)
+              s.bill_id as "billId",
+              s.section_type as "sectionType",
+              s.section_title as "sectionTitle",
+              m.acronym as ministry,
+              sess.date as "sessionDate"
+            FROM section_speakers ss
+            JOIN sections s ON ss.section_id = s.id
+            JOIN sessions sess ON s.session_id = sess.id
+            LEFT JOIN ministries m ON s.ministry_id = m.id
+            WHERE ss.member_id = $1 AND s.section_type = 'BP' AND s.bill_id IS NOT NULL
+            ORDER BY s.bill_id, sess.date DESC
+            LIMIT 50`,
+      [id]
+    )
+
+    return NextResponse.json({
+      ...member,
+      questions: questionsResult.rows,
+      bills: billsResult.rows
+    })
+  } catch (error) {
+    console.error('Database error:', error)
+    return NextResponse.json(
+      { error: 'Failed to fetch member' },
+      { status: 500 }
+    )
+  }
 }
