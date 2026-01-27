@@ -6,6 +6,8 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
+  const searchParams = request.nextUrl.searchParams
+  const search = searchParams.get('search') || ''
 
   try {
     // Get member info with summary and most recent designation/constituency
@@ -66,8 +68,7 @@ export async function GET(
     const member = memberResult.rows[0]
 
     // Get questions this member spoke in (excluding bills)
-    const questionsResult = await query(
-      `SELECT 
+    let questionsSql = `SELECT 
               s.id,
               s.section_type as "sectionType",
               s.section_title as "sectionTitle",
@@ -80,15 +81,26 @@ export async function GET(
             JOIN sections s ON ss.section_id = s.id
             JOIN sessions sess ON s.session_id = sess.id
             LEFT JOIN ministries m ON s.ministry_id = m.id
-            WHERE ss.member_id = $1 AND s.section_type NOT IN ('BI', 'BP')
-            ORDER BY sess.date DESC, s.section_order ASC
-            LIMIT 100`,
-      [id]
-    )
+            WHERE ss.member_id = $1 AND s.section_type NOT IN ('BI', 'BP')`
+
+    const questionsParams: (string | number)[] = [id]
+    let qParamCount = 2
+
+    if (search) {
+      questionsSql += ` AND (
+            to_tsvector('english', s.content_plain) @@ plainto_tsquery('english', $${qParamCount}) OR 
+            s.section_title ILIKE $${qParamCount + 1}
+        )`
+      questionsParams.push(search, `%${search}%`)
+      qParamCount += 2
+    }
+
+    questionsSql += ` ORDER BY sess.date DESC, s.section_order ASC LIMIT 100`
+
+    const questionsResult = await query(questionsSql, questionsParams)
 
     // Get bills this member is involved in (BP sections only, with bill_id for linking)
-    const billsResult = await query(
-      `SELECT DISTINCT ON (s.bill_id)
+    let billsSql = `SELECT DISTINCT ON (s.bill_id)
               s.bill_id as "billId",
               s.section_type as "sectionType",
               s.section_title as "sectionTitle",
@@ -98,11 +110,23 @@ export async function GET(
             JOIN sections s ON ss.section_id = s.id
             JOIN sessions sess ON s.session_id = sess.id
             LEFT JOIN ministries m ON s.ministry_id = m.id
-            WHERE ss.member_id = $1 AND s.section_type = 'BP' AND s.bill_id IS NOT NULL
-            ORDER BY s.bill_id, sess.date DESC
-            LIMIT 50`,
-      [id]
-    )
+            WHERE ss.member_id = $1 AND s.section_type = 'BP' AND s.bill_id IS NOT NULL`
+
+    const billsParams: (string | number)[] = [id]
+    let bParamCount = 2
+
+    if (search) {
+      billsSql += ` AND (
+            to_tsvector('english', s.content_plain) @@ plainto_tsquery('english', $${bParamCount}) OR 
+            s.section_title ILIKE $${bParamCount + 1}
+        )`
+      billsParams.push(search, `%${search}%`)
+      bParamCount += 2
+    }
+
+    billsSql += ` ORDER BY s.bill_id, sess.date DESC LIMIT 50`
+
+    const billsResult = await query(billsSql, billsParams)
 
     return NextResponse.json({
       ...member,

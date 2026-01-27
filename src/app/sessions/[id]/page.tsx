@@ -3,6 +3,7 @@
 import { useState, useEffect, use } from 'react'
 import Link from 'next/link'
 import QuestionCard from '@/components/QuestionCard'
+import SearchBar from '@/components/SearchBar'
 import type { Section } from '@/types'
 
 // Helper to format ordinal numbers (1st, 2nd, 3rd, etc.)
@@ -52,6 +53,7 @@ export default function SessionDetailPage({
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [showAttendance, setShowAttendance] = useState(false)
+    const [searchQuery, setSearchQuery] = useState('')
 
     useEffect(() => {
         async function fetchSession() {
@@ -68,6 +70,16 @@ export default function SessionDetailPage({
         }
         fetchSession()
     }, [id])
+
+    // Filter content based on search query
+    const filteredBills = session?.bills.filter(bill =>
+        bill.sectionTitle.toLowerCase().includes(searchQuery.toLowerCase())
+    ) || []
+
+    const filteredQuestions = session?.questions.filter(question =>
+        question.sectionTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (question.contentPlain && question.contentPlain.toLowerCase().includes(searchQuery.toLowerCase()))
+    ) || []
 
     if (loading) {
         return (
@@ -149,6 +161,13 @@ export default function SessionDetailPage({
                 </section>
             )}
 
+            <div className="mb-8">
+                <SearchBar
+                    placeholder="Search bills and questions..."
+                    onSearch={setSearchQuery}
+                />
+            </div>
+
             {/* Attendance */}
             {session.attendees && session.attendees.length > 0 && (
                 <section className="mb-8">
@@ -217,13 +236,13 @@ export default function SessionDetailPage({
             )}
 
             {/* Bills */}
-            {session.bills && session.bills.length > 0 && (
+            {filteredBills.length > 0 && (
                 <section className="mb-8">
                     <h2 className="mb-4 text-xl font-semibold text-zinc-900 dark:text-white">
-                        Bills ({session.bills.length})
+                        Bills ({filteredBills.length})
                     </h2>
                     <div className="grid gap-4 md:grid-cols-2">
-                        {session.bills.map((bill) => (
+                        {filteredBills.map((bill) => (
                             <Link key={bill.billId} href={`/bills/${bill.billId}`}>
                                 <div className="group cursor-pointer rounded-lg border border-zinc-200 bg-white p-4 transition-all hover:border-purple-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-purple-700">
                                     <div className="mb-2 flex flex-wrap items-center gap-2">
@@ -256,15 +275,15 @@ export default function SessionDetailPage({
             {/* Questions */}
             <section>
                 <h2 className="mb-4 text-xl font-semibold text-zinc-900 dark:text-white">
-                    Questions ({session.questions.length})
+                    Questions ({filteredQuestions.length})
                 </h2>
-                {session.questions.length === 0 ? (
+                {filteredQuestions.length === 0 ? (
                     <p className="py-8 text-center text-zinc-500 dark:text-zinc-400">
-                        No questions in this session
+                        {searchQuery ? 'No results found matching your search' : 'No questions in this session'}
                     </p>
                 ) : (
                     <div className="grid gap-4 md:grid-cols-2">
-                        {session.questions.map((question) => (
+                        {filteredQuestions.map((question) => (
                             <QuestionCard key={question.id} question={question} showDate={false} />
                         ))}
                     </div>

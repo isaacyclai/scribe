@@ -33,9 +33,16 @@ export async function GET(request: NextRequest) {
   let paramCount = 1
 
   if (search) {
-    sql += ` AND b.title ILIKE $${paramCount}`
-    params.push(`%${search}%`)
-    paramCount++
+    sql += ` AND (
+      b.title ILIKE $${paramCount} OR
+      EXISTS (
+        SELECT 1 FROM sections s_search 
+        WHERE s_search.bill_id = b.id 
+        AND to_tsvector('english', s_search.content_plain) @@ plainto_tsquery('english', $${paramCount + 1})
+      )
+    )`
+    params.push(`%${search}%`, search)
+    paramCount += 2
   }
 
   sql += ` ORDER BY COALESCE(b.first_reading_date, 

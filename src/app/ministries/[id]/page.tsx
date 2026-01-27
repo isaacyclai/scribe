@@ -3,6 +3,7 @@
 import { useState, useEffect, use } from 'react'
 import Link from 'next/link'
 import QuestionCard from '@/components/QuestionCard'
+import SearchBar from '@/components/SearchBar'
 import type { Section } from '@/types'
 
 interface Bill {
@@ -29,11 +30,15 @@ export default function MinistryDetailPage({
     const [ministry, setMinistry] = useState<MinistryDetail | null>(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+    const [searchQuery, setSearchQuery] = useState('')
 
     useEffect(() => {
         async function fetchMinistry() {
             try {
-                const res = await fetch(`/api/ministries/${id}`)
+                const params = new URLSearchParams()
+                if (searchQuery) params.set('search', searchQuery)
+
+                const res = await fetch(`/api/ministries/${id}?${params}`)
                 if (!res.ok) throw new Error('Ministry not found')
                 const data = await res.json()
                 setMinistry(data)
@@ -44,7 +49,11 @@ export default function MinistryDetailPage({
             }
         }
         fetchMinistry()
-    }, [id])
+    }, [id, searchQuery])
+
+    // Use ministry data directly as it's now filtered on the server
+    const filteredBills = ministry?.bills || []
+    const filteredQuestions = ministry?.questions || []
 
     if (loading) {
         return (
@@ -79,14 +88,21 @@ export default function MinistryDetailPage({
                 </h1>
             </section>
 
+            <div className="mb-8">
+                <SearchBar
+                    placeholder="Search bills and questions..."
+                    onSearch={setSearchQuery}
+                />
+            </div>
+
             {/* Bills Section */}
-            {ministry.bills && ministry.bills.length > 0 && (
+            {filteredBills.length > 0 && (
                 <section className="mb-8">
                     <h2 className="mb-4 text-xl font-semibold text-zinc-900 dark:text-white">
-                        Bills ({ministry.bills.length})
+                        Bills ({filteredBills.length})
                     </h2>
                     <div className="grid gap-4 md:grid-cols-2">
-                        {ministry.bills.map((bill) => (
+                        {filteredBills.map((bill) => (
                             <Link key={bill.billId} href={`/bills/${bill.billId}`}>
                                 <div className="group cursor-pointer rounded-lg border border-zinc-200 bg-white p-4 transition-all hover:border-purple-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-purple-700">
                                     <div className="mb-2 flex flex-wrap items-center gap-2">
@@ -114,15 +130,15 @@ export default function MinistryDetailPage({
             {/* Questions Section */}
             <section>
                 <h2 className="mb-4 text-xl font-semibold text-zinc-900 dark:text-white">
-                    Related Questions ({ministry.questions?.length || 0})
+                    Related Questions ({filteredQuestions.length || 0})
                 </h2>
-                {!ministry.questions || ministry.questions.length === 0 ? (
+                {filteredQuestions.length === 0 ? (
                     <p className="py-8 text-center text-zinc-500 dark:text-zinc-400">
-                        No questions found for this ministry
+                        {searchQuery ? 'No results found matching your search' : 'No questions found for this ministry'}
                     </p>
                 ) : (
                     <div className="grid gap-4 md:grid-cols-2">
-                        {ministry.questions.map((question) => (
+                        {filteredQuestions.map((question) => (
                             <QuestionCard key={question.id} question={question} />
                         ))}
                     </div>
