@@ -90,42 +90,42 @@ export default function BillDetailPage({
 
     return (
         <div className="mx-auto max-w-4xl">
-            <Link href="/bills" className="mb-6 inline-flex items-center text-sm text-blue-600 hover:underline dark:text-blue-400">
+            <Link href="/bills" className="mb-6 inline-flex items-center text-sm text-blue-600 hover:underline">
                 ← Back to Bills
             </Link>
 
-            <article className="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+            <article className="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm">
                 {/* Header */}
                 <header className="mb-6">
                     <div className="mb-3 flex flex-wrap items-center gap-2">
                         {bill.ministry && (
                             <Link
                                 href={`/ministries/${bill.ministryId}`}
-                                className="rounded bg-zinc-100 px-3 py-1 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                                className="rounded bg-zinc-100 px-3 py-1 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-200"
                             >
                                 {bill.ministry}
                             </Link>
                         )}
                     </div>
-                    <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">
+                    <h1 className="text-2xl font-bold text-zinc-900">
                         {bill.title}
                     </h1>
                 </header>
 
                 {/* Reading Timeline */}
-                <section className="mb-6 rounded-lg bg-zinc-50 p-4 dark:bg-zinc-800/50">
-                    <h2 className="mb-3 text-sm font-semibold uppercase text-zinc-500 dark:text-zinc-400">
+                <section className="mb-6 rounded-lg bg-zinc-50 p-4">
+                    <h2 className="mb-3 text-sm font-semibold uppercase text-zinc-500">
                         Reading Timeline
                     </h2>
                     <div className="space-y-3">
                         {bill.firstReadingDate && (
                             <div className="flex items-center gap-3">
-                                <span className="rounded bg-purple-100 px-2 py-1 text-xs font-medium text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+                                <span className="rounded bg-purple-100 px-2 py-1 text-xs font-medium text-purple-700">
                                     First Reading
                                 </span>
                                 <Link
                                     href={`/sessions/${bill.firstReadingSessionId}`}
-                                    className="text-sm text-zinc-700 hover:text-purple-600 hover:underline dark:text-zinc-300 dark:hover:text-purple-400"
+                                    className="text-sm text-zinc-700 hover:text-purple-600 hover:underline"
                                 >
                                     {new Date(bill.firstReadingDate).toLocaleDateString('en-SG', {
                                         weekday: 'long',
@@ -138,10 +138,10 @@ export default function BillDetailPage({
                         )}
                         {bill.secondReadingDates && bill.secondReadingDates.map((date, idx) => (
                             <div key={idx} className="flex items-center gap-3">
-                                <span className="rounded bg-purple-100 px-2 py-1 text-xs font-medium text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+                                <span className="rounded bg-purple-100 px-2 py-1 text-xs font-medium text-purple-700">
                                     Second Reading{bill.secondReadingDates.length > 1 ? ` (${idx + 1})` : ''}
                                 </span>
-                                <span className="text-sm text-zinc-700 dark:text-zinc-300">
+                                <span className="text-sm text-zinc-700">
                                     {new Date(date).toLocaleDateString('en-SG', {
                                         weekday: 'long',
                                         year: 'numeric',
@@ -157,7 +157,7 @@ export default function BillDetailPage({
                 {/* Speakers */}
                 {uniqueSpeakers.length > 0 && (
                     <section className="mb-6">
-                        <h2 className="mb-3 text-sm font-semibold uppercase text-zinc-500 dark:text-zinc-400">
+                        <h2 className="mb-3 text-sm font-semibold uppercase text-zinc-500">
                             Members Involved
                         </h2>
                         <div className="flex flex-wrap gap-2">
@@ -165,11 +165,11 @@ export default function BillDetailPage({
                                 <Link
                                     key={speaker.memberId}
                                     href={`/members/${speaker.memberId}`}
-                                    className="rounded-full bg-zinc-100 px-3 py-1 text-sm transition-colors hover:bg-purple-100 hover:text-purple-700 dark:bg-zinc-800 dark:hover:bg-purple-900/30 dark:hover:text-purple-400"
+                                    className="rounded-full bg-zinc-100 px-3 py-1 text-sm transition-colors hover:bg-purple-100 hover:text-purple-700"
                                 >
                                     {speaker.name}
                                     {speaker.designation && (
-                                        <span className="ml-1 text-zinc-500 dark:text-zinc-400">
+                                        <span className="ml-1 text-zinc-500">
                                             ({speaker.designation})
                                         </span>
                                     )}
@@ -183,7 +183,7 @@ export default function BillDetailPage({
                 {bill.secondReadings.length > 0 && (
                     <section>
                         <div className="mb-3 flex items-center justify-between">
-                            <h2 className="text-sm font-semibold uppercase text-zinc-500 dark:text-zinc-400">
+                            <h2 className="text-sm font-semibold uppercase text-zinc-500">
                                 Transcript{bill.secondReadings.length > 1 ? 's' : ''}
                             </h2>
                             {bill.secondReadings[0]?.sourceUrl && (
@@ -191,7 +191,7 @@ export default function BillDetailPage({
                                     href={bill.secondReadings[0].sourceUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-sm text-purple-600 hover:underline dark:text-purple-400"
+                                    className="text-sm text-purple-600 hover:underline"
                                 >
                                     View Original Hansard ↗
                                 </a>
@@ -201,7 +201,7 @@ export default function BillDetailPage({
                         {bill.secondReadings.map((section, idx) => (
                             <div key={section.id} className="mb-6">
                                 {bill.secondReadings.length > 1 && (
-                                    <h3 className="mb-2 text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                                    <h3 className="mb-2 text-sm font-medium text-zinc-600">
                                         {new Date(section.sessionDate).toLocaleDateString('en-SG', {
                                             year: 'numeric',
                                             month: 'long',
@@ -210,11 +210,11 @@ export default function BillDetailPage({
                                     </h3>
                                 )}
                                 <div
-                                    className="transcript-content prose prose-zinc max-w-none dark:prose-invert"
+                                    className="transcript-content prose prose-zinc max-w-none"
                                     dangerouslySetInnerHTML={{ __html: section.contentHtml }}
                                 />
                                 {idx < bill.secondReadings.length - 1 && (
-                                    <hr className="my-6 border-zinc-200 dark:border-zinc-700" />
+                                    <hr className="my-6 border-zinc-200" />
                                 )}
                             </div>
                         ))}
@@ -223,8 +223,8 @@ export default function BillDetailPage({
 
                 {/* No second reading yet */}
                 {bill.secondReadings.length === 0 && (
-                    <section className="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-900 dark:bg-amber-950/30">
-                        <p className="text-sm italic text-amber-600 dark:text-amber-400">
+                    <section className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+                        <p className="text-sm italic text-amber-600">
                             This bill has not yet had its second reading.
                         </p>
                     </section>

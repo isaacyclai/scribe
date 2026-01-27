@@ -51,17 +51,17 @@ export default function SessionsPage() {
 
     return (
         <div>
-            <h1 className="mb-2 text-3xl font-bold text-zinc-900 dark:text-white">
+            <h1 className="mb-2 text-3xl font-bold text-zinc-900">
                 Parliament Sessions
             </h1>
-            <p className="mb-6 text-zinc-600 dark:text-zinc-400">
+            <p className="mb-6 text-zinc-600">
                 Browse parliamentary sessions and their readings. (Placeholder)
             </p>
 
             {/* Date Range Filter */}
-            <div className="mb-6 flex flex-wrap items-center gap-4 rounded-lg border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+            <div className="mb-6 flex flex-wrap items-center gap-4 rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">
                 <div className="flex items-center gap-2">
-                    <label htmlFor="startDate" className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                    <label htmlFor="startDate" className="text-sm font-medium text-zinc-700">
                         From
                     </label>
                     <input
@@ -69,11 +69,11 @@ export default function SessionsPage() {
                         id="startDate"
                         value={startDate}
                         onChange={(e) => setStartDate(e.target.value)}
-                        className="rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
+                        className="rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                     />
                 </div>
                 <div className="flex items-center gap-2">
-                    <label htmlFor="endDate" className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                    <label htmlFor="endDate" className="text-sm font-medium text-zinc-700">
                         To
                     </label>
                     <input
@@ -81,7 +81,7 @@ export default function SessionsPage() {
                         id="endDate"
                         value={endDate}
                         onChange={(e) => setEndDate(e.target.value)}
-                        className="rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
+                        className="rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                     />
                 </div>
                 {(startDate || endDate) && (
@@ -90,7 +90,7 @@ export default function SessionsPage() {
                             setStartDate('')
                             setEndDate('')
                         }}
-                        className="text-sm text-blue-600 hover:underline dark:text-blue-400"
+                        className="text-sm text-blue-600 hover:underline"
                     >
                         Clear filters
                     </button>
@@ -104,7 +104,7 @@ export default function SessionsPage() {
             ) : (
                 <div className="grid gap-4">
                     {sessions.length === 0 ? (
-                        <p className="py-8 text-center text-zinc-500 dark:text-zinc-400">
+                        <p className="py-8 text-center text-zinc-500">
                             No sessions found for the selected date range
                         </p>
                     ) : (
@@ -112,10 +112,10 @@ export default function SessionsPage() {
                             <Link
                                 key={session.id}
                                 href={`/sessions/${session.id}`}
-                                className="block rounded-lg border border-zinc-200 bg-white p-5 shadow-sm transition-all hover:border-blue-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-blue-700"
+                                className="block rounded-lg border border-zinc-200 bg-white p-5 shadow-sm transition-all hover:border-blue-300 hover:shadow-md"
                             >
                                 <div className="mb-2 flex flex-wrap items-center gap-3">
-                                    <span className="text-lg font-semibold text-zinc-900 dark:text-white">
+                                    <span className="text-lg font-semibold text-zinc-900">
                                         {new Date(session.date).toLocaleDateString('en-SG', {
                                             weekday: 'long',
                                             year: 'numeric',
@@ -123,15 +123,15 @@ export default function SessionsPage() {
                                             day: 'numeric',
                                         })}
                                     </span>
-                                    <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
-                                        {session.questionCount} questions
+                                    <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-700">
+                                        {session.questionCount} sections
                                     </span>
                                 </div>
-                                <div className="mb-2 text-sm text-zinc-500 dark:text-zinc-400">
+                                <div className="mb-2 text-sm text-zinc-500">
                                     {getOrdinal(session.parliament)} Parliament, {getOrdinal(session.sessionNo)} Session, {getOrdinal(session.sittingNo)} Sitting
                                 </div>
                                 {session.summary && (
-                                    <p className="line-clamp-2 text-sm text-zinc-600 dark:text-zinc-400">
+                                    <p className="line-clamp-2 text-sm text-zinc-600">
                                         {session.summary}
                                     </p>
                                 )}

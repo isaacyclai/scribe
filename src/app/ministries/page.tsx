@@ -34,10 +34,10 @@ export default function MinistriesPage() {
     return (
         <div>
             <header className="mb-8">
-                <h1 className="mb-2 text-3xl font-bold text-zinc-900 dark:text-white">
+                <h1 className="mb-2 text-3xl font-bold text-zinc-900">
                     Ministries
                 </h1>
-                <p className="text-zinc-600 dark:text-zinc-400">
+                <p className="text-zinc-600">
                     Browse government ministries and their work. (Placeholder)
                 </p>
             </header>
@@ -46,17 +46,17 @@ export default function MinistriesPage() {
                     <Link
                         key={ministry.id}
                         href={`/ministries/${ministry.id}`}
-                        className="block rounded-lg border border-zinc-200 bg-white p-4 shadow-sm transition-all hover:border-green-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-green-700"
+                        className="block rounded-lg border border-zinc-200 bg-white p-4 shadow-sm transition-all hover:border-green-300 hover:shadow-md"
                     >
                         <div className="mb-1 flex items-center gap-2">
-                            <span className="rounded bg-green-100 px-2 py-0.5 text-xs font-bold text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                            <span className="rounded bg-green-100 px-2 py-0.5 text-xs font-bold text-green-700">
                                 {ministry.acronym}
                             </span>
-                            <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
+                            <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-600">
                                 {ministry.sectionCount || 0} sections
                             </span>
                         </div>
-                        <h3 className="font-semibold text-zinc-900 dark:text-white">
+                        <h3 className="font-semibold text-zinc-900">
                             {ministry.name}
                         </h3>
                     </Link>

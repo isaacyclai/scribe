@@ -44,10 +44,10 @@ export default function BillsPage() {
     return (
         <div>
             <header className="mb-8">
-                <h1 className="mb-2 text-3xl font-bold text-zinc-900 dark:text-white">
+                <h1 className="mb-2 text-3xl font-bold text-zinc-900">
                     Bills
                 </h1>
-                <p className="text-zinc-600 dark:text-zinc-400">
+                <p className="text-zinc-600">
                     Browse parliamentary bills and their readings. (Placeholder)
                 </p>
             </header>
@@ -64,33 +64,33 @@ export default function BillsPage() {
                     <div className="h-8 w-8 animate-spin rounded-full border-4 border-purple-500 border-t-transparent"></div>
                 </div>
             ) : bills.length === 0 ? (
-                <p className="py-12 text-center text-zinc-500 dark:text-zinc-400">
+                <p className="py-12 text-center text-zinc-500">
                     {search ? 'No bills found matching your search' : 'No bills found'}
                 </p>
             ) : (
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                     {bills.map((bill) => (
                         <Link key={bill.id} href={`/bills/${bill.id}`}>
-                            <div className="group cursor-pointer rounded-lg border border-zinc-200 bg-white p-4 transition-all hover:border-purple-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-purple-700">
+                            <div className="group cursor-pointer rounded-lg border border-zinc-200 bg-white p-4 transition-all hover:border-purple-300 hover:shadow-md">
                                 {/* Header */}
                                 <div className="mb-2 flex flex-wrap items-center gap-2">
                                     {bill.ministry && (
-                                        <span className="rounded bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
+                                        <span className="rounded bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600">
                                             {bill.ministry}
                                         </span>
                                     )}
                                 </div>
 
                                 {/* Title */}
-                                <h3 className="mb-3 line-clamp-2 font-semibold text-zinc-900 group-hover:text-purple-600 dark:text-white dark:group-hover:text-purple-400">
+                                <h3 className="mb-3 line-clamp-2 font-semibold text-zinc-900 group-hover:text-purple-600">
                                     {bill.title}
                                 </h3>
 
                                 {/* Reading Dates */}
-                                <div className="space-y-1 text-xs text-zinc-500 dark:text-zinc-400">
+                                <div className="space-y-1 text-xs text-zinc-500">
                                     {bill.firstReadingDate && (
                                         <div className="flex items-center gap-2">
-                                            <span className="rounded bg-purple-100 px-1.5 py-0.5 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+                                            <span className="rounded bg-purple-100 px-1.5 py-0.5 text-purple-700">
                                                 1R
                                             </span>
                                             <span>
@@ -104,7 +104,7 @@ export default function BillsPage() {
                                     )}
                                     {bill.secondReadingDate && (
                                         <div className="flex items-center gap-2">
-                                            <span className="rounded bg-purple-100 px-1.5 py-0.5 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+                                            <span className="rounded bg-purple-100 px-1.5 py-0.5 text-purple-700">
                                                 2R
                                             </span>
                                             <span>

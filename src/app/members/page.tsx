@@ -37,10 +37,10 @@ export default function MembersPage() {
     return (
         <div>
             <section className="mb-8">
-                <h1 className="mb-2 text-3xl font-bold text-zinc-900 dark:text-white">
+                <h1 className="mb-2 text-3xl font-bold text-zinc-900">
                     Members of Parliament
                 </h1>
-                <p className="mb-4 text-zinc-600 dark:text-zinc-400">
+                <p className="mb-4 text-zinc-600">
                     Browse profiles of Members of Parliament. (Placeholder)
                 </p>
                 <SearchBar
@@ -54,7 +54,7 @@ export default function MembersPage() {
                     <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
                 </div>
             ) : members.length === 0 ? (
-                <p className="py-12 text-center text-zinc-500 dark:text-zinc-400">
+                <p className="py-12 text-center text-zinc-500">
                     No members found
                 </p>
             ) : (

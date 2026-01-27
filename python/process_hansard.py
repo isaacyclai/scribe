@@ -205,10 +205,7 @@ def process_hansard_by_date(date_str: str):
             )
         
         processed += 1
-        
-        if processed == 100:
-            break
-        
+    
     print(f'Complete! Processed {processed} sections')
 
 if __name__ == '__main__':

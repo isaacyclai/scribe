@@ -66,28 +66,28 @@ export default function QuestionDetailPage({
 
     return (
         <div className="mx-auto max-w-4xl">
-            <Link href="/" className="mb-6 inline-flex items-center text-sm text-blue-600 hover:underline dark:text-blue-400">
+            <Link href="/" className="mb-6 inline-flex items-center text-sm text-blue-600 hover:underline">
                 ← Back to Questions
             </Link>
 
-            <article className="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+            <article className="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm">
                 {/* Header */}
                 <header className="mb-6">
                     <div className="mb-3 flex flex-wrap items-center gap-2">
-                        <span className="rounded bg-blue-100 px-3 py-1 text-sm font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                        <span className="rounded bg-blue-100 px-3 py-1 text-sm font-medium text-blue-700">
                             {typeLabel}
                         </span>
                         {question.ministry && question.ministryId && (
                             <Link
                                 href={`/ministries/${question.ministryId}`}
-                                className="rounded bg-green-100 px-3 py-1 text-sm font-medium text-green-700 transition-colors hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50"
+                                className="rounded bg-green-100 px-3 py-1 text-sm font-medium text-green-700 transition-colors hover:bg-green-200"
                             >
                                 {question.ministryName || question.ministry}
                             </Link>
                         )}
                         <Link
                             href={`/sessions/${question.sessionId}`}
-                            className="text-sm text-zinc-500 transition-colors hover:text-blue-600 hover:underline dark:text-zinc-400 dark:hover:text-blue-400"
+                            className="text-sm text-zinc-500 transition-colors hover:text-blue-600 hover:underline"
                         >
                             {new Date(question.sessionDate).toLocaleDateString('en-SG', {
                                 weekday: 'long',
@@ -97,7 +97,7 @@ export default function QuestionDetailPage({
                             })}
                         </Link>
                     </div>
-                    <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">
+                    <h1 className="text-2xl font-bold text-zinc-900">
                         {question.sectionTitle}
                     </h1>
                 </header>
@@ -105,7 +105,7 @@ export default function QuestionDetailPage({
                 {/* Speakers */}
                 {speakers.length > 0 && (
                     <section className="mb-6">
-                        <h2 className="mb-2 text-sm font-semibold uppercase text-zinc-500 dark:text-zinc-400">
+                        <h2 className="mb-2 text-sm font-semibold uppercase text-zinc-500">
                             Speakers
                         </h2>
                         <div className="flex flex-wrap gap-2">
@@ -115,7 +115,7 @@ export default function QuestionDetailPage({
                                     <Link
                                         key={i}
                                         href={`/members/${s.memberId}`}
-                                        className="rounded-full bg-zinc-100 px-3 py-1 text-sm text-zinc-700 transition-colors hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                                        className="rounded-full bg-zinc-100 px-3 py-1 text-sm text-zinc-700 transition-colors hover:bg-zinc-200"
                                     >
                                         {s.name}
                                         {s.designation && (
@@ -129,14 +129,14 @@ export default function QuestionDetailPage({
                 )}
 
                 {/* Summary placeholder */}
-                <section className="mb-6 rounded-lg bg-amber-50 p-4 dark:bg-amber-900/20">
+                <section className="mb-6 rounded-lg bg-amber-50 p-4">
                     <div className="mb-2 flex items-center justify-between">
-                        <h2 className="text-sm font-semibold uppercase text-amber-700 dark:text-amber-400">
+                        <h2 className="text-sm font-semibold uppercase text-amber-700">
                             Summary
                         </h2>
-                        <span className="text-xs text-amber-500 dark:text-amber-400">✨ AI Generated</span>
+                        <span className="text-xs text-amber-500">✨ AI Generated</span>
                     </div>
-                    <p className="text-sm italic text-amber-600 dark:text-amber-300">
+                    <p className="text-sm italic text-amber-600">
                         Summary will be added in a future update.
                     </p>
                 </section>
@@ -144,7 +144,7 @@ export default function QuestionDetailPage({
                 {/* Full Content */}
                 <section>
                     <div className="mb-3 flex items-center justify-between">
-                        <h2 className="text-sm font-semibold uppercase text-zinc-500 dark:text-zinc-400">
+                        <h2 className="text-sm font-semibold uppercase text-zinc-500">
                             Full Transcript
                         </h2>
                         {question.sourceUrl && (
@@ -152,14 +152,14 @@ export default function QuestionDetailPage({
                                 href={question.sourceUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-sm text-blue-600 hover:underline dark:text-blue-400"
+                                className="text-sm text-blue-600 hover:underline"
                             >
                                 View Original Hansard ↗
                             </a>
                         )}
                     </div>
                     <div
-                        className="transcript-content prose prose-zinc max-w-none dark:prose-invert"
+                        className="transcript-content prose prose-zinc max-w-none"
                         dangerouslySetInnerHTML={{ __html: question.contentHtml }}
                     />
                 </section>

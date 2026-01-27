@@ -35,19 +35,19 @@ export default function QuestionCard({
     return (
         <Link
             href={`/questions/${question.id}`}
-            className="block rounded-lg border border-zinc-200 bg-white p-4 shadow-sm transition-all hover:border-blue-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-blue-700"
+            className="block rounded-lg border border-zinc-200 bg-white p-4 shadow-sm transition-all hover:border-blue-300 hover:shadow-md"
         >
             <div className="mb-2 flex flex-wrap items-center gap-2">
-                <span className="rounded bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                <span className="rounded bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">
                     {typeLabel}
                 </span>
                 {question.ministry && (
-                    <span className="rounded bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                    <span className="rounded bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
                         {question.ministry}
                     </span>
                 )}
                 {showDate && question.sessionDate && (
-                    <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                    <span className="text-xs text-zinc-500">
                         {new Date(question.sessionDate).toLocaleDateString('en-SG', {
                             year: 'numeric',
                             month: 'short',
@@ -56,11 +56,11 @@ export default function QuestionCard({
                     </span>
                 )}
             </div>
-            <h3 className="mb-2 font-semibold text-zinc-900 dark:text-white">
+            <h3 className="mb-2 font-semibold text-zinc-900">
                 {question.sectionTitle}
             </h3>
             {showContent && (
-                <div className="mb-3 line-clamp-6 space-y-2 text-sm text-zinc-600 dark:text-zinc-400">
+                <div className="mb-3 line-clamp-6 space-y-2 text-sm text-zinc-600">
                     {question.contentPlain
                         .slice(0, 500)
                         .split(/\n\n+/)
@@ -76,7 +76,7 @@ export default function QuestionCard({
                     {speakerNames.slice(0, 3).map((name, i) => (
                         <span
                             key={i}
-                            className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400"
+                            className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-600"
                         >
                             {name}
                         </span>

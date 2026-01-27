@@ -105,12 +105,12 @@ export default function SessionDetailPage({
 
     return (
         <div>
-            <Link href="/sessions" className="mb-6 inline-flex items-center text-sm text-blue-600 hover:underline dark:text-blue-400">
+            <Link href="/sessions" className="mb-6 inline-flex items-center text-sm text-blue-600 hover:underline">
                 ← Back to Sessions
             </Link>
 
             <header className="mb-8">
-                <h1 className="mb-2 text-3xl font-bold text-zinc-900 dark:text-white">
+                <h1 className="mb-2 text-3xl font-bold text-zinc-900">
                     {new Date(session.date).toLocaleDateString('en-SG', {
                         weekday: 'long',
                         year: 'numeric',
@@ -118,7 +118,7 @@ export default function SessionDetailPage({
                         day: 'numeric',
                     })}
                 </h1>
-                <div className="flex flex-wrap gap-3 text-sm text-zinc-600 dark:text-zinc-400">
+                <div className="flex flex-wrap gap-3 text-sm text-zinc-600">
                     <span>{getOrdinal(session.parliament)} Parliament</span>
                     <span>•</span>
                     <span>{getOrdinal(session.sessionNo)} Session</span>
@@ -131,7 +131,7 @@ export default function SessionDetailPage({
                                 href={session.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-blue-600 hover:underline dark:text-blue-400"
+                                className="text-blue-600 hover:underline"
                             >
                                 Full report from Hansard ↗
                             </a>
@@ -142,20 +142,20 @@ export default function SessionDetailPage({
 
             {/* Session Summary */}
             {session.summary ? (
-                <section className="mb-8 rounded-lg border border-blue-200 bg-blue-50 p-5 dark:border-blue-900 dark:bg-blue-950/30">
+                <section className="mb-8 rounded-lg border border-blue-200 bg-blue-50 p-5">
                     <div className="mb-3 flex items-center justify-between">
-                        <h2 className="text-sm font-semibold uppercase text-blue-700 dark:text-blue-400">
+                        <h2 className="text-sm font-semibold uppercase text-blue-700">
                             Session Summary
                         </h2>
-                        <span className="text-xs text-blue-500 dark:text-blue-400">✨ AI Generated</span>
+                        <span className="text-xs text-blue-500">✨ AI Generated</span>
                     </div>
-                    <p className="whitespace-pre-wrap text-zinc-700 dark:text-zinc-300">
+                    <p className="whitespace-pre-wrap text-zinc-700">
                         {session.summary}
                     </p>
                 </section>
             ) : (
-                <section className="mb-8 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-900 dark:bg-amber-950/30">
-                    <p className="text-sm italic text-amber-600 dark:text-amber-400">
+                <section className="mb-8 rounded-lg border border-amber-200 bg-amber-50 p-4">
+                    <p className="text-sm italic text-amber-600">
                         Session summary will be generated in a future update.
                     </p>
                 </section>
@@ -173,7 +173,7 @@ export default function SessionDetailPage({
                 <section className="mb-8">
                     <button
                         onClick={() => setShowAttendance(!showAttendance)}
-                        className="mb-4 flex items-center gap-2 text-xl font-semibold text-zinc-900 dark:text-white"
+                        className="mb-4 flex items-center gap-2 text-xl font-semibold text-zinc-900"
                     >
                         <span>Members ({presentMembers.length} present, {absentMembers.length} absent)</span>
                         <svg
@@ -187,10 +187,10 @@ export default function SessionDetailPage({
                     </button>
 
                     {showAttendance && (
-                        <div className="rounded-lg border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
+                        <div className="rounded-lg border border-zinc-200 bg-white p-5">
                             {/* Present */}
                             <div className="mb-4">
-                                <h3 className="mb-2 text-sm font-semibold uppercase text-green-600 dark:text-green-400">
+                                <h3 className="mb-2 text-sm font-semibold uppercase text-green-600">
                                     Present ({presentMembers.length})
                                 </h3>
                                 <div className="flex flex-wrap gap-2">
@@ -198,11 +198,11 @@ export default function SessionDetailPage({
                                         <Link
                                             key={member.id}
                                             href={`/members/${member.id}`}
-                                            className="rounded-full bg-green-50 px-3 py-1 text-sm text-green-700 transition-colors hover:bg-green-100 dark:bg-green-900/20 dark:text-green-400 dark:hover:bg-green-900/40"
+                                            className="rounded-full bg-green-50 px-3 py-1 text-sm text-green-700 transition-colors hover:bg-green-100"
                                         >
                                             {member.name}
                                             {member.designation && (
-                                                <span className="ml-1 text-green-500 dark:text-green-500">
+                                                <span className="ml-1 text-green-500">
                                                     ({member.designation})
                                                 </span>
                                             )}
@@ -214,7 +214,7 @@ export default function SessionDetailPage({
                             {/* Absent */}
                             {absentMembers.length > 0 && (
                                 <div>
-                                    <h3 className="mb-2 text-sm font-semibold uppercase text-zinc-500 dark:text-zinc-400">
+                                    <h3 className="mb-2 text-sm font-semibold uppercase text-zinc-500">
                                         Absent ({absentMembers.length})
                                     </h3>
                                     <div className="flex flex-wrap gap-2">
@@ -222,7 +222,7 @@ export default function SessionDetailPage({
                                             <Link
                                                 key={member.id}
                                                 href={`/members/${member.id}`}
-                                                className="rounded-full bg-zinc-100 px-3 py-1 text-sm text-zinc-500 transition-colors hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700"
+                                                className="rounded-full bg-zinc-100 px-3 py-1 text-sm text-zinc-500 transition-colors hover:bg-zinc-200"
                                             >
                                                 {member.name}
                                             </Link>
@@ -238,31 +238,31 @@ export default function SessionDetailPage({
             {/* Bills */}
             {filteredBills.length > 0 && (
                 <section className="mb-8">
-                    <h2 className="mb-4 text-xl font-semibold text-zinc-900 dark:text-white">
+                    <h2 className="mb-4 text-xl font-semibold text-zinc-900">
                         Bills ({filteredBills.length})
                     </h2>
                     <div className="grid gap-4 md:grid-cols-2">
                         {filteredBills.map((bill) => (
                             <Link key={bill.billId} href={`/bills/${bill.billId}`}>
-                                <div className="group cursor-pointer rounded-lg border border-zinc-200 bg-white p-4 transition-all hover:border-purple-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-purple-700">
+                                <div className="group cursor-pointer rounded-lg border border-zinc-200 bg-white p-4 transition-all hover:border-purple-300 hover:shadow-md">
                                     <div className="mb-2 flex flex-wrap items-center gap-2">
                                         {bill.readingTypes?.includes('BI') && (
-                                            <span className="rounded bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+                                            <span className="rounded bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700">
                                                 1st Reading
                                             </span>
                                         )}
                                         {bill.readingTypes?.includes('BP') && (
-                                            <span className="rounded bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+                                            <span className="rounded bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700">
                                                 2nd Reading
                                             </span>
                                         )}
                                         {bill.ministry && (
-                                            <span className="rounded bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
+                                            <span className="rounded bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600">
                                                 {bill.ministry}
                                             </span>
                                         )}
                                     </div>
-                                    <h3 className="line-clamp-2 font-semibold text-zinc-900 group-hover:text-purple-600 dark:text-white dark:group-hover:text-purple-400">
+                                    <h3 className="line-clamp-2 font-semibold text-zinc-900 group-hover:text-purple-600">
                                         {bill.sectionTitle}
                                     </h3>
                                 </div>
@@ -274,11 +274,11 @@ export default function SessionDetailPage({
 
             {/* Questions */}
             <section>
-                <h2 className="mb-4 text-xl font-semibold text-zinc-900 dark:text-white">
+                <h2 className="mb-4 text-xl font-semibold text-zinc-900">
                     Questions ({filteredQuestions.length})
                 </h2>
                 {filteredQuestions.length === 0 ? (
-                    <p className="py-8 text-center text-zinc-500 dark:text-zinc-400">
+                    <p className="py-8 text-center text-zinc-500">
                         {searchQuery ? 'No results found matching your search' : 'No questions in this session'}
                     </p>
                 ) : (

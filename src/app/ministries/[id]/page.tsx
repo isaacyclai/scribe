@@ -73,17 +73,17 @@ export default function MinistryDetailPage({
 
     return (
         <div>
-            <Link href="/ministries" className="mb-6 inline-flex items-center text-sm text-blue-600 hover:underline dark:text-blue-400">
+            <Link href="/ministries" className="mb-6 inline-flex items-center text-sm text-blue-600 hover:underline">
                 ← Back to Ministries
             </Link>
 
             <section className="mb-8">
                 <div className="mb-2 flex items-center gap-2">
-                    <span className="rounded bg-green-100 px-3 py-1 text-sm font-bold text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                    <span className="rounded bg-green-100 px-3 py-1 text-sm font-bold text-green-700">
                         {ministry.acronym}
                     </span>
                 </div>
-                <h1 className="text-3xl font-bold text-zinc-900 dark:text-white">
+                <h1 className="text-3xl font-bold text-zinc-900">
                     {ministry.name}
                 </h1>
             </section>
@@ -98,18 +98,18 @@ export default function MinistryDetailPage({
             {/* Bills Section */}
             {filteredBills.length > 0 && (
                 <section className="mb-8">
-                    <h2 className="mb-4 text-xl font-semibold text-zinc-900 dark:text-white">
+                    <h2 className="mb-4 text-xl font-semibold text-zinc-900">
                         Bills ({filteredBills.length})
                     </h2>
                     <div className="grid gap-4 md:grid-cols-2">
                         {filteredBills.map((bill) => (
                             <Link key={bill.billId} href={`/bills/${bill.billId}`}>
-                                <div className="group cursor-pointer rounded-lg border border-zinc-200 bg-white p-4 transition-all hover:border-purple-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-purple-700">
+                                <div className="group cursor-pointer rounded-lg border border-zinc-200 bg-white p-4 transition-all hover:border-purple-300 hover:shadow-md">
                                     <div className="mb-2 flex flex-wrap items-center gap-2">
-                                        <span className="rounded bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+                                        <span className="rounded bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700">
                                             Bill
                                         </span>
-                                        <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                                        <span className="text-xs text-zinc-500">
                                             {new Date(bill.sessionDate).toLocaleDateString('en-SG', {
                                                 year: 'numeric',
                                                 month: 'short',
@@ -117,7 +117,7 @@ export default function MinistryDetailPage({
                                             })}
                                         </span>
                                     </div>
-                                    <h3 className="line-clamp-2 font-semibold text-zinc-900 group-hover:text-purple-600 dark:text-white dark:group-hover:text-purple-400">
+                                    <h3 className="line-clamp-2 font-semibold text-zinc-900 group-hover:text-purple-600">
                                         {bill.sectionTitle}
                                     </h3>
                                 </div>
@@ -129,11 +129,11 @@ export default function MinistryDetailPage({
 
             {/* Questions Section */}
             <section>
-                <h2 className="mb-4 text-xl font-semibold text-zinc-900 dark:text-white">
+                <h2 className="mb-4 text-xl font-semibold text-zinc-900">
                     Related Questions ({filteredQuestions.length || 0})
                 </h2>
                 {filteredQuestions.length === 0 ? (
-                    <p className="py-8 text-center text-zinc-500 dark:text-zinc-400">
+                    <p className="py-8 text-center text-zinc-500">
                         {searchQuery ? 'No results found matching your search' : 'No questions found for this ministry'}
                     </p>
                 ) : (

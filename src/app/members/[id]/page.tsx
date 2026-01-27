@@ -76,30 +76,30 @@ export default function MemberDetailPage({
 
     return (
         <div>
-            <Link href="/members" className="mb-6 inline-flex items-center text-sm text-blue-600 hover:underline dark:text-blue-400">
+            <Link href="/members" className="mb-6 inline-flex items-center text-sm text-blue-600 hover:underline">
                 ← Back to Members
             </Link>
 
             <section className="mb-8">
-                <h1 className="mb-2 text-3xl font-bold text-zinc-900 dark:text-white">
+                <h1 className="mb-2 text-3xl font-bold text-zinc-900">
                     {member.name}
                 </h1>
                 {(member.designation || member.constituency) && (
                     <div className="mb-3 flex flex-wrap items-center gap-3">
                         {member.designation && (
-                            <span className="text-lg text-zinc-600 dark:text-zinc-400">
+                            <span className="text-lg text-zinc-600">
                                 {member.designation}
                             </span>
                         )}
                         {member.constituency && (
-                            <span className="rounded bg-zinc-100 px-2 py-1 text-sm text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
+                            <span className="rounded bg-zinc-100 px-2 py-1 text-sm text-zinc-600">
                                 {member.constituency}
                             </span>
                         )}
                     </div>
                 )}
                 {member.summary && (
-                    <p className="text-zinc-600 dark:text-zinc-400">
+                    <p className="text-zinc-600">
                         {member.summary}
                     </p>
                 )}
@@ -115,23 +115,23 @@ export default function MemberDetailPage({
             {/* Bills Section */}
             {filteredBills.length > 0 && (
                 <section className="mb-8">
-                    <h2 className="mb-4 text-xl font-semibold text-zinc-900 dark:text-white">
+                    <h2 className="mb-4 text-xl font-semibold text-zinc-900">
                         Bills ({filteredBills.length})
                     </h2>
                     <div className="grid gap-4 md:grid-cols-2">
                         {filteredBills.map((bill) => (
                             <Link key={bill.billId} href={`/bills/${bill.billId}`}>
-                                <div className="group cursor-pointer rounded-lg border border-zinc-200 bg-white p-4 transition-all hover:border-purple-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-purple-700">
+                                <div className="group cursor-pointer rounded-lg border border-zinc-200 bg-white p-4 transition-all hover:border-purple-300 hover:shadow-md">
                                     <div className="mb-2 flex flex-wrap items-center gap-2">
-                                        <span className="rounded bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+                                        <span className="rounded bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700">
                                             Bill
                                         </span>
                                         {bill.ministry && (
-                                            <span className="rounded bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
+                                            <span className="rounded bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600">
                                                 {bill.ministry}
                                             </span>
                                         )}
-                                        <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                                        <span className="text-xs text-zinc-500">
                                             {new Date(bill.sessionDate).toLocaleDateString('en-SG', {
                                                 year: 'numeric',
                                                 month: 'short',
@@ -139,7 +139,7 @@ export default function MemberDetailPage({
                                             })}
                                         </span>
                                     </div>
-                                    <h3 className="line-clamp-2 font-semibold text-zinc-900 group-hover:text-purple-600 dark:text-white dark:group-hover:text-purple-400">
+                                    <h3 className="line-clamp-2 font-semibold text-zinc-900 group-hover:text-purple-600">
                                         {bill.sectionTitle}
                                     </h3>
                                 </div>
@@ -151,11 +151,11 @@ export default function MemberDetailPage({
 
             {/* Questions Section */}
             <section>
-                <h2 className="mb-4 text-xl font-semibold text-zinc-900 dark:text-white">
+                <h2 className="mb-4 text-xl font-semibold text-zinc-900">
                     Parliamentary Questions ({filteredQuestions.length || 0})
                 </h2>
                 {filteredQuestions.length === 0 ? (
-                    <p className="py-8 text-center text-zinc-500 dark:text-zinc-400">
+                    <p className="py-8 text-center text-zinc-500">
                         {searchQuery ? 'No results found matching your search' : 'No recorded questions'}
                     </p>
                 ) : (

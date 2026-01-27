@@ -38,10 +38,10 @@ export default function QuestionsPage() {
     return (
         <div>
             <header className="mb-8">
-                <h1 className="mb-2 text-3xl font-bold text-zinc-900 dark:text-white">
+                <h1 className="mb-2 text-3xl font-bold text-zinc-900">
                     Questions
                 </h1>
-                <p className="text-zinc-600 dark:text-zinc-400">
+                <p className="text-zinc-600">
                     Browse and search parliamentary questions. (Placeholder)
                 </p>
             </header>
@@ -54,7 +54,7 @@ export default function QuestionsPage() {
             </div>
 
             <section>
-                <h2 className="mb-4 text-xl font-semibold text-zinc-900 dark:text-white">
+                <h2 className="mb-4 text-xl font-semibold text-zinc-900">
                     {searchQuery ? `Search Results for "${searchQuery}"` : 'Recent Questions'}
                 </h2>
                 {loading ? (
@@ -62,7 +62,7 @@ export default function QuestionsPage() {
                         <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
                     </div>
                 ) : questions.length === 0 ? (
-                    <p className="py-12 text-center text-zinc-500 dark:text-zinc-400">
+                    <p className="py-12 text-center text-zinc-500">
                         No questions found
                     </p>
                 ) : (
