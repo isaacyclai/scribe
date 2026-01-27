@@ -66,7 +66,7 @@ export default function QuestionDetailPage({
 
     return (
         <div className="mx-auto max-w-4xl">
-            <Link href="/" className="mb-6 inline-flex items-center text-sm text-blue-600 hover:underline">
+            <Link href="/questions" className="mb-6 inline-flex items-center text-sm text-blue-600 hover:underline">
                 ← Back to Questions
             </Link>
 

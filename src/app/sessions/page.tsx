@@ -28,18 +28,28 @@ export default function SessionsPage() {
     const [loading, setLoading] = useState(true)
     const [startDate, setStartDate] = useState('')
     const [endDate, setEndDate] = useState('')
+    const [page, setPage] = useState(1)
+    const [totalPages, setTotalPages] = useState(1)
+
+    useEffect(() => {
+        // Reset to page 1 when filters change
+        setPage(1)
+    }, [startDate, endDate])
 
     useEffect(() => {
         async function fetchSessions() {
             setLoading(true)
             try {
                 const params = new URLSearchParams()
+                params.set('page', page.toString())
+                params.set('limit', '20')
                 if (startDate) params.set('startDate', startDate)
                 if (endDate) params.set('endDate', endDate)
 
                 const res = await fetch(`/api/sessions?${params.toString()}`)
                 const data = await res.json()
-                setSessions(data)
+                setSessions(data.sessions)
+                setTotalPages(data.totalPages)
             } catch (error) {
                 console.error('Failed to fetch sessions:', error)
             } finally {
@@ -47,7 +57,7 @@ export default function SessionsPage() {
             }
         }
         fetchSessions()
-    }, [startDate, endDate])
+    }, [startDate, endDate, page])
 
     return (
         <div>
@@ -108,35 +118,60 @@ export default function SessionsPage() {
                             No sessions found for the selected date range
                         </p>
                     ) : (
-                        sessions.map((session) => (
-                            <Link
-                                key={session.id}
-                                href={`/sessions/${session.id}`}
-                                className="block rounded-lg border border-zinc-200 bg-white p-5 shadow-sm transition-all hover:border-blue-300 hover:shadow-md"
-                            >
-                                <div className="mb-2 flex flex-wrap items-center gap-3">
-                                    <span className="text-lg font-semibold text-zinc-900">
-                                        {new Date(session.date).toLocaleDateString('en-SG', {
-                                            weekday: 'long',
-                                            year: 'numeric',
-                                            month: 'long',
-                                            day: 'numeric',
-                                        })}
+                        <>
+                            {sessions.map((session) => (
+                                <Link
+                                    key={session.id}
+                                    href={`/sessions/${session.id}`}
+                                    className="block rounded-lg border border-zinc-200 bg-white p-5 shadow-sm transition-all hover:border-blue-300 hover:shadow-md"
+                                >
+                                    <div className="mb-2 flex flex-wrap items-center gap-3">
+                                        <span className="text-lg font-semibold text-zinc-900">
+                                            {new Date(session.date).toLocaleDateString('en-SG', {
+                                                weekday: 'long',
+                                                year: 'numeric',
+                                                month: 'long',
+                                                day: 'numeric',
+                                            })}
+                                        </span>
+                                        <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-700">
+                                            {session.questionCount} sections
+                                        </span>
+                                    </div>
+                                    <div className="mb-2 text-sm text-zinc-500">
+                                        {getOrdinal(session.parliament)} Parliament, {getOrdinal(session.sessionNo)} Session, {getOrdinal(session.sittingNo)} Sitting
+                                    </div>
+                                    {session.summary && (
+                                        <p className="line-clamp-2 text-sm text-zinc-600">
+                                            {session.summary}
+                                        </p>
+                                    )}
+                                </Link>
+                            ))}
+
+                            {/* Pagination Controls */}
+                            {totalPages > 1 && (
+                                <div className="mt-8 flex justify-center gap-2">
+                                    <button
+                                        onClick={() => setPage((p) => Math.max(1, p - 1))}
+                                        disabled={page === 1}
+                                        className="rounded border border-zinc-300 px-3 py-1 text-sm disabled:opacity-50"
+                                    >
+                                        Previous
+                                    </button>
+                                    <span className="flex items-center text-sm text-zinc-600">
+                                        Page {page} of {totalPages}
                                     </span>
-                                    <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-700">
-                                        {session.questionCount} sections
-                                    </span>
+                                    <button
+                                        onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                                        disabled={page === totalPages}
+                                        className="rounded border border-zinc-300 px-3 py-1 text-sm disabled:opacity-50"
+                                    >
+                                        Next
+                                    </button>
                                 </div>
-                                <div className="mb-2 text-sm text-zinc-500">
-                                    {getOrdinal(session.parliament)} Parliament, {getOrdinal(session.sessionNo)} Session, {getOrdinal(session.sittingNo)} Sitting
-                                </div>
-                                {session.summary && (
-                                    <p className="line-clamp-2 text-sm text-zinc-600">
-                                        {session.summary}
-                                    </p>
-                                )}
-                            </Link>
-                        ))
+                            )}
+                        </>
                     )}
                 </div>
             )}

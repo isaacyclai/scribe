@@ -4,35 +4,86 @@ import { query } from '@/lib/db'
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
   const search = searchParams.get('search') || ''
-  const limit = parseInt(searchParams.get('limit') || '100')
+  const constituency = searchParams.get('constituency')
+  const limit = parseInt(searchParams.get('limit') || '20')
+  const page = parseInt(searchParams.get('page') || '1')
+  const offset = (page - 1) * limit
 
-  // Get members with their most recent designation and constituency
-  // Check both section_speakers (for PQ speakers) and session_attendance (for all attendees)
-  let sql = `
+  try {
+    const params: (string | number)[] = []
+    let paramCount = 1
+    let whereClause = '1=1'
+
+    if (search) {
+      whereClause += ` AND m.name ILIKE $${paramCount}`
+      params.push(`%${search}%`)
+      paramCount++
+    }
+
+    // CTE to get member constituencies efficiently for filtering
+    const constituencyCTE = `
+      WITH MemberConstituency AS (
+        SELECT 
+          m.id as member_id,
+          COALESCE(
+            (
+              SELECT ss2.constituency 
+              FROM section_speakers ss2
+              JOIN sections s2 ON ss2.section_id = s2.id
+              JOIN sessions sess2 ON s2.session_id = sess2.id
+              WHERE ss2.member_id = m.id AND ss2.constituency IS NOT NULL
+              ORDER BY sess2.date DESC
+              LIMIT 1
+            ),
+            (
+              SELECT sa.constituency
+              FROM session_attendance sa
+              JOIN sessions sess ON sa.session_id = sess.id
+              WHERE sa.member_id = m.id AND sa.constituency IS NOT NULL
+              ORDER BY sess.date DESC
+              LIMIT 1
+            )
+          ) as constituency
+        FROM members m
+      )
+    `
+
+    // If filtering by constituency, we need to join with the calculated constituency
+    if (constituency) {
+      whereClause += ` AND mc.constituency = $${paramCount}`
+      params.push(constituency)
+      paramCount++
+    }
+
+    // Get total count
+    const countSql = `
+      ${constituencyCTE}
+      SELECT COUNT(*) as total 
+      FROM members m
+      LEFT JOIN MemberConstituency mc ON m.id = mc.member_id
+      WHERE ${whereClause}
+    `
+    const countResult = await query(countSql, params)
+    const total = parseInt(countResult.rows[0].total)
+
+    // Determine sort order
+    let orderBy = 'm.name ASC'
+    const sort = searchParams.get('sort')
+    if (sort === 'involvements') {
+      orderBy = '"sectionCount" DESC, m.name ASC'
+    } else if (sort === 'name_desc') {
+      orderBy = 'm.name DESC'
+    }
+
+    // Get members data
+    const sql = `
+    ${constituencyCTE}
     SELECT 
       m.id,
       m.name,
       ms.summary,
       COUNT(DISTINCT ss.section_id) as "sectionCount",
-      COALESCE(
-        (
-          SELECT ss2.constituency 
-          FROM section_speakers ss2
-          JOIN sections s2 ON ss2.section_id = s2.id
-          JOIN sessions sess2 ON s2.session_id = sess2.id
-          WHERE ss2.member_id = m.id AND ss2.constituency IS NOT NULL
-          ORDER BY sess2.date DESC
-          LIMIT 1
-        ),
-        (
-          SELECT sa.constituency
-          FROM session_attendance sa
-          JOIN sessions sess ON sa.session_id = sess.id
-          WHERE sa.member_id = m.id AND sa.constituency IS NOT NULL
-          ORDER BY sess.date DESC
-          LIMIT 1
-        )
-      ) as constituency,
+      mc.constituency,
       COALESCE(
         (
           SELECT ss3.designation 
@@ -53,28 +104,24 @@ export async function GET(request: NextRequest) {
         )
       ) as designation
     FROM members m
+    LEFT JOIN MemberConstituency mc ON m.id = mc.member_id
     LEFT JOIN member_summaries ms ON m.id = ms.member_id
     LEFT JOIN section_speakers ss ON m.id = ss.member_id
-    WHERE 1=1
+    WHERE ${whereClause}
+    GROUP BY m.id, m.name, ms.summary, mc.constituency
+    ORDER BY ${orderBy}
+    LIMIT $${paramCount} OFFSET $${paramCount + 1}
   `
 
-  const params: (string | number)[] = []
-  let paramCount = 1
+    const dataParams = [...params, limit, offset]
+    const result = await query(sql, dataParams)
 
-  if (search) {
-    sql += ` AND m.name ILIKE $${paramCount}`
-    params.push(`%${search}%`)
-    paramCount++
-  }
-
-  sql += ` GROUP BY m.id, m.name, ms.summary
-           ORDER BY m.name ASC
-           LIMIT $${paramCount}`
-  params.push(limit)
-
-  try {
-    const result = await query(sql, params)
-    return NextResponse.json(result.rows)
+    return NextResponse.json({
+      members: result.rows,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit)
+    })
   } catch (error) {
     console.error('Database error:', error)
     return NextResponse.json(

@@ -11,7 +11,7 @@ export default function Navbar() {
         { href: '/sessions', label: 'Sessions' },
         { href: '/questions', label: 'Questions' },
         { href: '/bills', label: 'Bills' },
-        { href: '/members', label: 'Members' },
+        { href: '/members', label: 'MPs' },
         { href: '/ministries', label: 'Ministries' },
     ]
 

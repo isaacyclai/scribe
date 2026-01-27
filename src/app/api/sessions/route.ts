@@ -4,12 +4,36 @@ import { query } from '@/lib/db'
 
 export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams
-    const limit = parseInt(searchParams.get('limit') || '50')
+    const limit = parseInt(searchParams.get('limit') || '20')
+    const page = parseInt(searchParams.get('page') || '1')
+    const offset = (page - 1) * limit
     const startDate = searchParams.get('startDate')
     const endDate = searchParams.get('endDate')
 
     try {
-        let sql = `
+        const params: (string | number)[] = []
+        let paramCount = 1
+        let whereClause = '1=1'
+
+        if (startDate) {
+            whereClause += ` AND s.date >= $${paramCount}`
+            params.push(startDate)
+            paramCount++
+        }
+
+        if (endDate) {
+            whereClause += ` AND s.date <= $${paramCount}`
+            params.push(endDate)
+            paramCount++
+        }
+
+        // Get total count
+        const countSql = `SELECT COUNT(*) as total FROM sessions s WHERE ${whereClause}`
+        const countResult = await query(countSql, params)
+        const total = parseInt(countResult.rows[0].total)
+
+        // Get data
+        const sql = `
       SELECT 
         s.id,
         s.date,
@@ -23,32 +47,21 @@ export async function GET(request: NextRequest) {
         COUNT(sec.id) as "questionCount"
       FROM sessions s
       LEFT JOIN sections sec ON s.id = sec.session_id
-      WHERE 1=1
-    `
-        const params: (string | number)[] = []
-        let paramCount = 1
-
-        if (startDate) {
-            sql += ` AND s.date >= $${paramCount}`
-            params.push(startDate)
-            paramCount++
-        }
-
-        if (endDate) {
-            sql += ` AND s.date <= $${paramCount}`
-            params.push(endDate)
-            paramCount++
-        }
-
-        sql += `
+      WHERE ${whereClause}
       GROUP BY s.id
       ORDER BY s.date DESC
-      LIMIT $${paramCount}
+      LIMIT $${paramCount} OFFSET $${paramCount + 1}
     `
-        params.push(limit)
 
-        const result = await query(sql, params)
-        return NextResponse.json(result.rows)
+        const dataParams = [...params, limit, offset]
+        const result = await query(sql, dataParams)
+
+        return NextResponse.json({
+            sessions: result.rows,
+            total,
+            page,
+            totalPages: Math.ceil(total / limit)
+        })
     } catch (error) {
         console.error('Database error:', error)
         return NextResponse.json(
