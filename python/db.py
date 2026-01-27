@@ -55,6 +55,17 @@ def add_section_speaker(section_id, member_id, constituency=None, designation=No
         (section_id, member_id, constituency, designation)
     )
 
+def add_session_attendance(session_id, member_id, present=True, constituency=None, designation=None):
+    execute_query(
+        '''INSERT INTO session_attendance (session_id, member_id, present, constituency, designation)
+           VALUES (%s, %s, %s, %s, %s)
+           ON CONFLICT (session_id, member_id) DO UPDATE SET
+           present = EXCLUDED.present,
+           constituency = EXCLUDED.constituency,
+           designation = EXCLUDED.designation''',
+        (session_id, member_id, present, constituency, designation)
+    )
+
 if __name__ == '__main__':
     try:
         result = execute_query('SELECT NOW()', fetch=True)

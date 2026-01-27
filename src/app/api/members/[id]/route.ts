@@ -9,28 +9,49 @@ export async function GET(
 
     try {
         // Get member info with summary and most recent designation/constituency
+        // Check both section_speakers and session_attendance
         const memberResult = await query(
             `SELECT 
               m.id, 
               m.name, 
               ms.summary,
-              (
-                SELECT ss2.constituency 
-                FROM section_speakers ss2
-                JOIN sections s2 ON ss2.section_id = s2.id
-                JOIN sessions sess2 ON s2.session_id = sess2.id
-                WHERE ss2.member_id = m.id AND ss2.constituency IS NOT NULL
-                ORDER BY sess2.date DESC
-                LIMIT 1
+              COALESCE(
+                (
+                  SELECT ss2.constituency 
+                  FROM section_speakers ss2
+                  JOIN sections s2 ON ss2.section_id = s2.id
+                  JOIN sessions sess2 ON s2.session_id = sess2.id
+                  WHERE ss2.member_id = m.id AND ss2.constituency IS NOT NULL
+                  ORDER BY sess2.date DESC
+                  LIMIT 1
+                ),
+                (
+                  SELECT sa.constituency
+                  FROM session_attendance sa
+                  JOIN sessions sess ON sa.session_id = sess.id
+                  WHERE sa.member_id = m.id AND sa.constituency IS NOT NULL
+                  ORDER BY sess.date DESC
+                  LIMIT 1
+                )
               ) as constituency,
-              (
-                SELECT ss3.designation 
-                FROM section_speakers ss3
-                JOIN sections s3 ON ss3.section_id = s3.id
-                JOIN sessions sess3 ON s3.session_id = sess3.id
-                WHERE ss3.member_id = m.id AND ss3.designation IS NOT NULL
-                ORDER BY sess3.date DESC
-                LIMIT 1
+              COALESCE(
+                (
+                  SELECT ss3.designation 
+                  FROM section_speakers ss3
+                  JOIN sections s3 ON ss3.section_id = s3.id
+                  JOIN sessions sess3 ON s3.session_id = sess3.id
+                  WHERE ss3.member_id = m.id AND ss3.designation IS NOT NULL
+                  ORDER BY sess3.date DESC
+                  LIMIT 1
+                ),
+                (
+                  SELECT sa2.designation
+                  FROM session_attendance sa2
+                  JOIN sessions sess4 ON sa2.session_id = sess4.id
+                  WHERE sa2.member_id = m.id AND sa2.designation IS NOT NULL
+                  ORDER BY sess4.date DESC
+                  LIMIT 1
+                )
               ) as designation
             FROM members m
             LEFT JOIN member_summaries ms ON m.id = ms.member_id

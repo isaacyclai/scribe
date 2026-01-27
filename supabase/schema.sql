@@ -77,12 +77,24 @@ CREATE TABLE section_speakers (
     PRIMARY KEY (section_id, member_id)
 );
 
+-- Session attendance: tracks which members attended each session
+CREATE TABLE session_attendance (
+    session_id UUID REFERENCES sessions(id) ON DELETE CASCADE,
+    member_id UUID REFERENCES members(id) ON DELETE CASCADE,
+    present BOOLEAN NOT NULL DEFAULT true,
+    constituency VARCHAR(255), -- Snapshot at this time
+    designation TEXT, -- Snapshot at this time
+    PRIMARY KEY (session_id, member_id)
+);
+
 -- Indexes
 CREATE INDEX idx_sections_session ON sections(session_id);
 CREATE INDEX idx_sections_ministry ON sections(ministry_id);
 CREATE INDEX idx_sessions_date ON sessions(date);
 CREATE INDEX idx_section_speakers_section ON section_speakers(section_id);
 CREATE INDEX idx_section_speakers_member ON section_speakers(member_id);
+CREATE INDEX idx_session_attendance_session ON session_attendance(session_id);
+CREATE INDEX idx_session_attendance_member ON session_attendance(member_id);
 
 -- Full-text search
 CREATE INDEX idx_sections_content_plain_fts ON sections 
@@ -95,6 +107,7 @@ ALTER TABLE member_summaries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE ministries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE sections ENABLE ROW LEVEL SECURITY;
 ALTER TABLE section_speakers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE session_attendance ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Enable read access for all users" ON sessions FOR SELECT USING (true);
 CREATE POLICY "Enable read access for all users" ON members FOR SELECT USING (true);
@@ -102,6 +115,7 @@ CREATE POLICY "Enable read access for all users" ON member_summaries FOR SELECT 
 CREATE POLICY "Enable read access for all users" ON ministries FOR SELECT USING (true);
 CREATE POLICY "Enable read access for all users" ON sections FOR SELECT USING (true);
 CREATE POLICY "Enable read access for all users" ON section_speakers FOR SELECT USING (true);
+CREATE POLICY "Enable read access for all users" ON session_attendance FOR SELECT USING (true);
 
 -- View: Sections with Speaker details
 CREATE VIEW sections_with_speakers AS

@@ -12,17 +12,17 @@ export async function GET(
         // Get session info
         const sessionResult = await query(
             `SELECT 
-        id,
-        date,
-        sitting_no as "sittingNo",
-        parliament,
-        session_no as "sessionNo",
-        volume_no as "volumeNo",
-        format,
-        url,
-        summary
-       FROM sessions 
-       WHERE id = $1`,
+              id,
+              date,
+              sitting_no as "sittingNo",
+              parliament,
+              session_no as "sessionNo",
+              volume_no as "volumeNo",
+              format,
+              url,
+              summary
+            FROM sessions 
+            WHERE id = $1`,
             [id]
         )
 
@@ -35,35 +35,51 @@ export async function GET(
         // Get all questions in this session
         const questionsResult = await query(
             `SELECT 
-        s.id,
-        s.section_type as "sectionType",
-        s.section_title as "sectionTitle",
-        s.content_plain as "contentPlain",
-        s.section_order as "sectionOrder",
-        m.acronym as ministry,
-        COALESCE(
-          json_agg(
-            json_build_object(
-              'memberId', mem.id,
-              'name', mem.name,
-              'designation', ss.designation
-            ) ORDER BY mem.name
-          ) FILTER (WHERE mem.id IS NOT NULL),
-          '[]'
-        ) as speakers
-       FROM sections s
-       LEFT JOIN ministries m ON s.ministry_id = m.id
-       LEFT JOIN section_speakers ss ON s.id = ss.section_id
-       LEFT JOIN members mem ON ss.member_id = mem.id
-       WHERE s.session_id = $1
-       GROUP BY s.id, s.section_type, s.section_title, s.content_plain, s.section_order, m.acronym
-       ORDER BY s.section_order ASC`,
+              s.id,
+              s.section_type as "sectionType",
+              s.section_title as "sectionTitle",
+              s.content_plain as "contentPlain",
+              s.section_order as "sectionOrder",
+              m.acronym as ministry,
+              COALESCE(
+                json_agg(
+                  json_build_object(
+                    'memberId', mem.id,
+                    'name', mem.name,
+                    'designation', ss.designation
+                  ) ORDER BY mem.name
+                ) FILTER (WHERE mem.id IS NOT NULL),
+                '[]'
+              ) as speakers
+            FROM sections s
+            LEFT JOIN ministries m ON s.ministry_id = m.id
+            LEFT JOIN section_speakers ss ON s.id = ss.section_id
+            LEFT JOIN members mem ON ss.member_id = mem.id
+            WHERE s.session_id = $1
+            GROUP BY s.id, s.section_type, s.section_title, s.content_plain, s.section_order, m.acronym
+            ORDER BY s.section_order ASC`,
+            [id]
+        )
+
+        // Get attendance for this session
+        const attendanceResult = await query(
+            `SELECT 
+              m.id,
+              m.name,
+              sa.present,
+              sa.constituency,
+              sa.designation
+            FROM session_attendance sa
+            JOIN members m ON sa.member_id = m.id
+            WHERE sa.session_id = $1
+            ORDER BY sa.present DESC, m.name ASC`,
             [id]
         )
 
         return NextResponse.json({
             ...session,
-            questions: questionsResult.rows
+            questions: questionsResult.rows,
+            attendees: attendanceResult.rows
         })
     } catch (error) {
         console.error('Database error:', error)

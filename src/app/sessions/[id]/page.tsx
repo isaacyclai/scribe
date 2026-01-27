@@ -12,6 +12,14 @@ function getOrdinal(n: number): string {
     return n + (s[(v - 20) % 10] || s[v] || s[0])
 }
 
+interface Attendee {
+    id: string
+    name: string
+    present: boolean
+    constituency: string | null
+    designation: string | null
+}
+
 interface SessionDetail {
     id: string
     date: string
@@ -23,6 +31,7 @@ interface SessionDetail {
     url: string
     summary: string | null
     questions: Section[]
+    attendees: Attendee[]
 }
 
 export default function SessionDetailPage({
@@ -34,6 +43,7 @@ export default function SessionDetailPage({
     const [session, setSession] = useState<SessionDetail | null>(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+    const [showAttendance, setShowAttendance] = useState(false)
 
     useEffect(() => {
         async function fetchSession() {
@@ -69,6 +79,9 @@ export default function SessionDetailPage({
             </div>
         )
     }
+
+    const presentMembers = session.attendees?.filter(a => a.present) || []
+    const absentMembers = session.attendees?.filter(a => !a.present) || []
 
     return (
         <div>
@@ -125,6 +138,73 @@ export default function SessionDetailPage({
                     <p className="text-sm italic text-amber-600 dark:text-amber-400">
                         Session summary will be generated in a future update.
                     </p>
+                </section>
+            )}
+
+            {/* Attendance */}
+            {session.attendees && session.attendees.length > 0 && (
+                <section className="mb-8">
+                    <button
+                        onClick={() => setShowAttendance(!showAttendance)}
+                        className="mb-4 flex items-center gap-2 text-xl font-semibold text-zinc-900 dark:text-white"
+                    >
+                        <span>Members ({presentMembers.length} present, {absentMembers.length} absent)</span>
+                        <svg
+                            className={`h-5 w-5 transition-transform ${showAttendance ? 'rotate-180' : ''}`}
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+
+                    {showAttendance && (
+                        <div className="rounded-lg border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
+                            {/* Present */}
+                            <div className="mb-4">
+                                <h3 className="mb-2 text-sm font-semibold uppercase text-green-600 dark:text-green-400">
+                                    Present ({presentMembers.length})
+                                </h3>
+                                <div className="flex flex-wrap gap-2">
+                                    {presentMembers.map((member) => (
+                                        <Link
+                                            key={member.id}
+                                            href={`/members/${member.id}`}
+                                            className="rounded-full bg-green-50 px-3 py-1 text-sm text-green-700 transition-colors hover:bg-green-100 dark:bg-green-900/20 dark:text-green-400 dark:hover:bg-green-900/40"
+                                        >
+                                            {member.name}
+                                            {member.designation && (
+                                                <span className="ml-1 text-green-500 dark:text-green-500">
+                                                    ({member.designation})
+                                                </span>
+                                            )}
+                                        </Link>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Absent */}
+                            {absentMembers.length > 0 && (
+                                <div>
+                                    <h3 className="mb-2 text-sm font-semibold uppercase text-zinc-500 dark:text-zinc-400">
+                                        Absent ({absentMembers.length})
+                                    </h3>
+                                    <div className="flex flex-wrap gap-2">
+                                        {absentMembers.map((member) => (
+                                            <Link
+                                                key={member.id}
+                                                href={`/members/${member.id}`}
+                                                className="rounded-full bg-zinc-100 px-3 py-1 text-sm text-zinc-500 transition-colors hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700"
+                                            >
+                                                {member.name}
+                                            </Link>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </section>
             )}
 

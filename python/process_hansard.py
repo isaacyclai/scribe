@@ -1,6 +1,6 @@
 import sys
 
-from db import execute_query, find_or_create_member, find_ministry_by_acronym, add_section_speaker
+from db import execute_query, find_or_create_member, find_ministry_by_acronym, add_section_speaker, add_session_attendance
 from hansard_api import HansardAPI
 
 DESIGNATION_TO_MINISTRY = {
@@ -83,8 +83,37 @@ def process_hansard_by_date(date_str: str):
     session_id = session_result[0]['id']
     print(f'   Session ID: {session_id}')
     
-    # 3. Process each section
-    print('3. Inserting sections...')
+    # 3. Save attendance
+    print('3. Saving attendance...')
+    present_count = 0
+    absent_count = 0
+    
+    for mp in parliament_session.present_members:
+        member_id = find_or_create_member(mp.name)
+        add_session_attendance(
+            session_id=session_id,
+            member_id=member_id,
+            present=True,
+            constituency=mp.constituency,
+            designation=mp.appointment
+        )
+        present_count += 1
+    
+    for mp in parliament_session.absent_members:
+        member_id = find_or_create_member(mp.name)
+        add_session_attendance(
+            session_id=session_id,
+            member_id=member_id,
+            present=False,
+            constituency=mp.constituency,
+            designation=mp.appointment
+        )
+        absent_count += 1
+    
+    print(f'   Present: {present_count}, Absent: {absent_count}')
+    
+    # 4. Process each section
+    print('4. Inserting sections...')
     processed = 0
 
     for idx, section in enumerate(sections):
@@ -131,7 +160,7 @@ def process_hansard_by_date(date_str: str):
         
         processed += 1
 
-        if processed == 10:
+        if processed == 25:
             break
         
     print(f'Complete! Processed {processed} sections')
