@@ -1,39 +1,72 @@
-'use client'
-
-import { useState, useEffect, useCallback } from 'react'
-import SearchBar from '@/components/SearchBar'
 import QuestionCard from '@/components/QuestionCard'
-import type { Section } from '@/types'
+import QuestionFilters from '@/components/QuestionFilters'
+import { query } from '@/lib/db'
+import type { Section, Speaker } from '@/types'
 
-export default function QuestionsPage() {
-    const [questions, setQuestions] = useState<Section[]>([])
-    const [loading, setLoading] = useState(true)
-    const [searchQuery, setSearchQuery] = useState('')
+export default async function QuestionsPage({
+    searchParams,
+}: {
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}) {
+    const params = await searchParams
+    const search = typeof params.search === 'string' ? params.search : ''
+    const limit = 50
 
-    const fetchQuestions = useCallback(async (search: string) => {
-        setLoading(true)
-        try {
-            const params = new URLSearchParams()
-            if (search) params.set('search', search)
-            params.set('limit', '20')
+    let sql = `
+        SELECT 
+            s.id,
+            s.session_id as "sessionId",
+            s.section_type as "sectionType",
+            s.section_title as "sectionTitle",
+            LEFT(s.content_plain, 300) as "contentSnippet",
+            s.section_order as "sectionOrder",
+            m.acronym as ministry,
+            m.id as "ministryId",
+            sess.date as "sessionDate",
+            sess.sitting_no as "sittingNo",
+            COALESCE(
+                json_agg(
+                    json_build_object(
+                        'memberId', mem.id,
+                        'name', mem.name,
+                        'constituency', ss.constituency,
+                        'designation', ss.designation
+                    ) ORDER BY mem.name
+                ) FILTER (WHERE mem.id IS NOT NULL),
+                '[]'
+            ) as speakers
+        FROM sections s
+        JOIN sessions sess ON s.session_id = sess.id
+        LEFT JOIN ministries m ON s.ministry_id = m.id
+        LEFT JOIN section_speakers ss ON s.id = ss.section_id
+        LEFT JOIN members mem ON ss.member_id = mem.id
+        WHERE (s.category = 'question' OR s.category IS NULL)
+            AND s.section_type NOT IN ('BI', 'BP')
+    `
 
-            const res = await fetch(`/api/sections?${params}`)
-            const data = await res.json()
-            setQuestions(data)
-        } catch (error) {
-            console.error('Failed to fetch questions:', error)
-        } finally {
-            setLoading(false)
-        }
-    }, [])
+    const sqlParams: (string | number)[] = []
+    let paramCount = 1
 
-    useEffect(() => {
-        fetchQuestions(searchQuery)
-    }, [searchQuery, fetchQuestions])
+    if (search) {
+        sql += ` AND (
+            to_tsvector('english', s.content_plain) @@ plainto_tsquery('english', $${paramCount}) OR 
+            s.section_title ILIKE $${paramCount + 1}
+        )`
+        sqlParams.push(search, `%${search}%`)
+        paramCount += 2
+    }
 
-    const handleSearch = useCallback((query: string) => {
-        setSearchQuery(query)
-    }, [])
+    sql += ` GROUP BY s.id, s.session_id, s.section_type, s.section_title, 
+             s.section_order, m.acronym, m.id, sess.date, sess.sitting_no
+             ORDER BY sess.date DESC, s.section_order ASC 
+             LIMIT $${paramCount}`
+    sqlParams.push(limit)
+
+    const result = await query(sql, sqlParams)
+    const questions: Section[] = result.rows.map(row => ({
+        ...row,
+        speakers: row.speakers as Speaker[]
+    }))
 
     return (
         <div>
@@ -42,28 +75,20 @@ export default function QuestionsPage() {
                     Questions
                 </h1>
                 <p className="text-zinc-600">
-                    Browse and search parliamentary questions. (Placeholder)
+                    Browse and search parliamentary questions.
                 </p>
             </header>
 
-            <div className="mb-6">
-                <SearchBar
-                    placeholder="Search questions by title..."
-                    onSearch={handleSearch}
-                />
-            </div>
+            <QuestionFilters initialSearch={search} />
 
             <section>
                 <h2 className="mb-4 text-xl font-semibold text-zinc-900">
-                    {searchQuery ? `Search Results for "${searchQuery}"` : 'Recent Questions'}
+                    {search ? `Search Results for "${search}"` : 'Recent Questions'}
                 </h2>
-                {loading ? (
-                    <div className="flex items-center justify-center py-12">
-                        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
-                    </div>
-                ) : questions.length === 0 ? (
+
+                {questions.length === 0 ? (
                     <p className="py-12 text-center text-zinc-500">
-                        No questions found
+                        {search ? `No questions found matching "${search}"` : 'No questions found'}
                     </p>
                 ) : (
                     <div className="grid gap-4 md:grid-cols-2">

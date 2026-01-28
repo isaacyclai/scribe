@@ -6,14 +6,21 @@ interface SearchBarProps {
     placeholder?: string
     onSearch: (query: string) => void
     debounceMs?: number
+    defaultValue?: string
 }
 
 export default function SearchBar({
     placeholder = 'Search...',
     onSearch,
     debounceMs = 300,
+    defaultValue = '',
 }: SearchBarProps) {
-    const [query, setQuery] = useState('')
+    const [query, setQuery] = useState(defaultValue)
+
+    // Sync state if defaultValue changes (e.g. from parent or URL)
+    useEffect(() => {
+        setQuery(defaultValue)
+    }, [defaultValue])
 
     useEffect(() => {
         const timer = setTimeout(() => {

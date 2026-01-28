@@ -176,7 +176,7 @@ export default function QuestionDetailPage({
                     </div>
                     <div
                         className="transcript-content prose prose-zinc max-w-none"
-                        dangerouslySetInnerHTML={{ __html: question.contentHtml }}
+                        dangerouslySetInnerHTML={{ __html: question.contentHtml || '' }}
                     />
                 </section>
             </article>

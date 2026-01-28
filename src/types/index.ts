@@ -39,8 +39,9 @@ export interface Section {
     sittingNo: number
     sectionType: string
     sectionTitle: string
-    contentHtml: string
-    contentPlain: string
+    contentHtml?: string
+    contentPlain?: string
+    contentSnippet?: string
     sectionOrder: number
     ministry: string | null
     ministryId: string | null

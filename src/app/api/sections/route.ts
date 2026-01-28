@@ -16,8 +16,7 @@ export async function GET(request: NextRequest) {
       s.session_id as "sessionId",
       s.section_type as "sectionType",
       s.section_title as "sectionTitle",
-      s.content_html as "contentHtml",
-      s.content_plain as "contentPlain",
+      LEFT(s.content_plain, 300) as "contentSnippet",
       s.section_order as "sectionOrder",
       m.acronym as ministry,
       m.id as "ministryId",
@@ -73,8 +72,8 @@ export async function GET(request: NextRequest) {
     paramCount++
   }
 
-  sql += ` GROUP BY s.id, s.session_id, s.section_type, s.section_title, s.content_html, 
-           s.content_plain, s.section_order, m.acronym, m.id, sess.date, sess.sitting_no
+  sql += ` GROUP BY s.id, s.session_id, s.section_type, s.section_title, 
+           s.section_order, m.acronym, m.id, sess.date, sess.sitting_no
            ORDER BY sess.date DESC, s.section_order ASC 
            LIMIT $${paramCount}`
   params.push(limit)

@@ -91,12 +91,11 @@ export default function QuestionCard({
             </h3>
             {showContent && (
                 <div className="mb-3 line-clamp-6 space-y-2 text-sm text-zinc-600">
-                    {question.contentPlain
-                        .slice(0, 500)
-                        .split(/\n\n+/)
-                        .filter(p => p.trim())
+                    {question.contentSnippet
+                        ?.split(/\n\n+/)
+                        .filter((p: string) => p.trim())
                         .slice(0, 3)
-                        .map((paragraph, i) => (
+                        .map((paragraph: string, i: number) => (
                             <p key={i}>{paragraph.trim()}</p>
                         ))}
                 </div>

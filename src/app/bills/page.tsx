@@ -1,8 +1,6 @@
-'use client'
-
-import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import SearchBar from '@/components/SearchBar'
+import BillFilters from '@/components/BillFilters'
+import { query } from '@/lib/db'
 
 interface Bill {
     id: string
@@ -16,30 +14,63 @@ interface Bill {
     ministryName: string | null
 }
 
-export default function BillsPage() {
-    const [bills, setBills] = useState<Bill[]>([])
-    const [loading, setLoading] = useState(true)
-    const [search, setSearch] = useState('')
+export default async function BillsPage({
+    searchParams,
+}: {
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}) {
+    const params = await searchParams
+    const search = typeof params.search === 'string' ? params.search : ''
+    const limit = 100
 
-    useEffect(() => {
-        async function fetchBills() {
-            setLoading(true)
-            try {
-                const params = new URLSearchParams()
-                if (search) params.set('search', search)
-                params.set('limit', '100')
+    // Get unified bills with their reading information
+    let sql = `
+        SELECT 
+            b.id,
+            b.title,
+            b.first_reading_date as "firstReadingDate",
+            b.first_reading_session_id as "firstReadingSessionId",
+            m.id as "ministryId",
+            m.acronym as ministry,
+            m.name as "ministryName",
+            -- Get second reading info from sections
+            (SELECT MIN(sess.date) FROM sections s 
+             JOIN sessions sess ON s.session_id = sess.id 
+             WHERE s.bill_id = b.id AND s.section_type = 'BP') as "secondReadingDate",
+            (SELECT s.session_id FROM sections s 
+             JOIN sessions sess ON s.session_id = sess.id 
+             WHERE s.bill_id = b.id AND s.section_type = 'BP' 
+             ORDER BY sess.date LIMIT 1) as "secondReadingSessionId"
+        FROM bills b
+        LEFT JOIN ministries m ON b.ministry_id = m.id
+        WHERE 1=1
+    `
 
-                const res = await fetch(`/api/bills?${params}`)
-                const data = await res.json()
-                setBills(data)
-            } catch (error) {
-                console.error('Failed to fetch bills:', error)
-            } finally {
-                setLoading(false)
-            }
-        }
-        fetchBills()
-    }, [search])
+    const sqlParams: (string | number)[] = []
+    let paramCount = 1
+
+    if (search) {
+        sql += ` AND (
+            b.title ILIKE $${paramCount} OR
+            EXISTS (
+                SELECT 1 FROM sections s_search 
+                WHERE s_search.bill_id = b.id 
+                AND to_tsvector('english', s_search.content_plain) @@ plainto_tsquery('english', $${paramCount + 1})
+            )
+        )`
+        sqlParams.push(`%${search}%`, search)
+        paramCount += 2
+    }
+
+    sql += ` ORDER BY COALESCE(b.first_reading_date, 
+                 (SELECT MIN(sess.date) FROM sections s 
+                  JOIN sessions sess ON s.session_id = sess.id 
+                  WHERE s.bill_id = b.id)) DESC NULLS LAST
+                 LIMIT $${paramCount}`
+    sqlParams.push(limit)
+
+    const result = await query(sql, sqlParams)
+    const bills: Bill[] = result.rows
 
     return (
         <div>
@@ -48,26 +79,17 @@ export default function BillsPage() {
                     Bills
                 </h1>
                 <p className="text-zinc-600">
-                    Browse parliamentary bills and their readings. (Placeholder)
+                    Browse parliamentary bills and their readings.
                 </p>
             </header>
 
-            <div className="mb-6">
-                <SearchBar
-                    placeholder="Search bills..."
-                    onSearch={setSearch}
-                />
-            </div>
+            <BillFilters initialSearch={search} />
 
             <section>
                 <h2 className="mb-4 text-xl font-semibold text-zinc-900">
                     {search ? `Search Results for "${search}"` : 'Recent Bills'}
                 </h2>
-                {loading ? (
-                    <div className="flex items-center justify-center py-12">
-                        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
-                    </div>
-                ) : bills.length === 0 ? (
+                {bills.length === 0 ? (
                     <p className="py-12 text-center text-zinc-500">
                         {search ? 'No bills found matching your search' : 'No bills found'}
                     </p>
@@ -75,7 +97,7 @@ export default function BillsPage() {
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                         {bills.map((bill) => (
                             <Link key={bill.id} href={`/bills/${bill.id}`}>
-                                <div className="group cursor-pointer rounded-lg border border-zinc-200 bg-white p-4 transition-all hover:border-purple-300 hover:shadow-md">
+                                <div className="group h-full cursor-pointer rounded-lg border border-zinc-200 bg-white p-4 transition-all hover:border-purple-300 hover:shadow-md">
                                     {/* Header */}
                                     <div className="mb-2 flex flex-wrap items-center gap-2">
                                         {bill.ministry && (
@@ -91,7 +113,7 @@ export default function BillsPage() {
                                     </h3>
 
                                     {/* Reading Dates */}
-                                    <div className="space-y-1 text-xs text-zinc-500">
+                                    <div className="mt-auto space-y-1 text-xs text-zinc-500">
                                         {bill.firstReadingDate && (
                                             <div className="flex items-center gap-2">
                                                 <span className="rounded bg-purple-100 px-1.5 py-0.5 text-purple-700">
