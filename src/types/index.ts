@@ -47,6 +47,7 @@ export interface Section {
     ministryId: string | null
     speakers: Speaker[] | string[]
     sourceUrl?: string | null
+    summary?: string | null
 }
 
 export interface FilterState {

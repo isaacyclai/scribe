@@ -4,6 +4,7 @@ import { useState, useEffect, use } from 'react'
 import Link from 'next/link'
 import QuestionCard from '@/components/QuestionCard'
 import SearchBar from '@/components/SearchBar'
+import AISummaryCard from '@/components/AISummaryCard'
 import type { Section } from '@/types'
 
 interface Bill {
@@ -98,11 +99,15 @@ export default function MemberDetailPage({
                         )}
                     </div>
                 )}
-                {member.summary && (
-                    <p className="text-zinc-600">
-                        {member.summary}
-                    </p>
-                )}
+
+                {/* Member Summary */}
+                <div className="mt-6">
+                    <AISummaryCard
+                        title="Summary of Recent Topics"
+                        content={member.summary}
+                        fallbackMessage="Summary of recent topics has not been generated yet."
+                    />
+                </div>
             </section>
 
             <div className="mb-8">

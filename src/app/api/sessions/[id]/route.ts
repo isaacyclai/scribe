@@ -94,10 +94,41 @@ export async function GET(
       [id]
     )
 
+    // Get statements (Ministerial Statements, etc.)
+    const statementsResult = await query(
+      `SELECT 
+              s.id,
+              s.section_type as "sectionType",
+              s.section_title as "sectionTitle",
+              s.content_plain as "contentPlain",
+              s.section_order as "sectionOrder",
+              s.summary,
+              m.acronym as ministry,
+              COALESCE(
+                json_agg(
+                  json_build_object(
+                    'memberId', mem.id,
+                    'name', mem.name,
+                    'designation', ss.designation
+                  ) ORDER BY mem.name
+                ) FILTER (WHERE mem.id IS NOT NULL),
+                '[]'
+              ) as speakers
+            FROM sections s
+            LEFT JOIN ministries m ON s.ministry_id = m.id
+            LEFT JOIN section_speakers ss ON s.id = ss.section_id
+            LEFT JOIN members mem ON ss.member_id = mem.id
+            WHERE s.session_id = $1 AND s.category = 'statement'
+            GROUP BY s.id, s.section_type, s.section_title, s.content_plain, s.section_order, s.summary, m.acronym
+            ORDER BY s.section_order ASC`,
+      [id]
+    )
+
     return NextResponse.json({
       ...session,
       questions: questionsResult.rows,
       bills: billsResult.rows,
+      statements: statementsResult.rows,
       attendees: attendanceResult.rows
     }, {
       headers: {

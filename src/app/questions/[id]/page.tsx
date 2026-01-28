@@ -2,6 +2,7 @@
 
 import { useState, useEffect, use } from 'react'
 import Link from 'next/link'
+import AISummaryCard from '@/components/AISummaryCard'
 import type { Section, Speaker } from '@/types'
 
 const QUESTION_TYPE_LABELS: Record<string, string> = {
@@ -128,18 +129,14 @@ export default function QuestionDetailPage({
                     </section>
                 )}
 
-                {/* Summary placeholder */}
-                <section className="mb-6 rounded-lg bg-amber-50 p-4">
-                    <div className="mb-2 flex items-center justify-between">
-                        <h2 className="text-sm font-semibold uppercase text-amber-700">
-                            Summary
-                        </h2>
-                        <span className="text-xs text-amber-500">✨ AI Generated</span>
-                    </div>
-                    <p className="text-sm italic text-amber-600">
-                        Summary will be added in a future update.
-                    </p>
-                </section>
+                {/* Summary */}
+                <div className="mb-6">
+                    <AISummaryCard
+                        title="Question Summary"
+                        content={question.summary}
+                        fallbackMessage="Summary will be added in a future update."
+                    />
+                </div>
 
                 {/* Full Content */}
                 <section>

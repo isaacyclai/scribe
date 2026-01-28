@@ -2,6 +2,7 @@
 
 import { useState, useEffect, use } from 'react'
 import Link from 'next/link'
+import AISummaryCard from '@/components/AISummaryCard'
 
 interface Speaker {
     memberId: string
@@ -31,6 +32,7 @@ interface BillDetail {
     ministryId: string | null
     ministry: string | null
     ministryName: string | null
+    summary: string | null
     firstReadings: BillSection[]
     secondReadings: BillSection[]
     secondReadingDates: string[]
@@ -66,7 +68,7 @@ export default function BillDetailPage({
     if (loading) {
         return (
             <div className="flex items-center justify-center py-12">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-purple-500 border-t-transparent"></div>
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
             </div>
         )
     }
@@ -111,6 +113,15 @@ export default function BillDetailPage({
                         {bill.title}
                     </h1>
                 </header>
+
+                {/* Bill Summary */}
+                <div className="mb-6">
+                    <AISummaryCard
+                        title="Bill Summary"
+                        content={bill.summary}
+                        fallbackMessage="Summary will be generated in a future update."
+                    />
+                </div>
 
                 {/* Reading Timeline */}
                 <section className="mb-6 rounded-lg bg-zinc-50 p-4">

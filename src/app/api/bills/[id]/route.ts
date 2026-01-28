@@ -17,7 +17,8 @@ export async function GET(
               b.first_reading_session_id as "firstReadingSessionId",
               m.id as "ministryId",
               m.acronym as ministry,
-              m.name as "ministryName"
+              m.name as "ministryName",
+              b.summary
             FROM bills b
             LEFT JOIN ministries m ON b.ministry_id = m.id
             WHERE b.id = $1`,

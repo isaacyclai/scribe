@@ -7,13 +7,31 @@ from util import parse_mp_name, extract_name_from_speaker_text, clean_html_for_d
 # OA: Oral Answer to Oral Question
 # WANA: Written Answer to Oral Question not answered by end of Question Time
 # WA: Written Answer
-# OS: Oral Statement
+# OS: Oral Statement (Ministerial Statements, etc.)
 # WS: Written Statement
 # BP: Second Reading of Bill
 # BI: First Reading of Bill 
 QUESTION_SECTION_TYPES = {'OA', 'WA', 'WANA'}
 BILL_TYPES = {'BI', 'BP'}
-OTHER_TYPES = {'OS'}
+STATEMENT_TYPES = {'OS', 'WS'}
+
+# All types we want to process
+ALL_VALID_TYPES = QUESTION_SECTION_TYPES | BILL_TYPES | STATEMENT_TYPES
+
+# Minimum content length to filter out procedural/short sections
+# This excludes things like "Motion to extend sitting" or "Adjournment of debate"
+MIN_CONTENT_LENGTH = 500
+
+# Keywords that indicate procedural content (not substantive)
+PROCEDURAL_KEYWORDS = [
+    'motion to adjourn',
+    'adjournment of debate',
+    'time extension',
+    'leave of absence',
+    'papers presented',
+    'papers laid',
+    'permission to members',
+]
 
 class MP:
     def __init__(self, name: str, constituency: str, appointment: str = None):
@@ -183,19 +201,33 @@ class ParliamentSession:
     def set_sections(self, raw_sections: List[Dict]):
         """
         Parse raw section data and store as Section objects with matched speakers.
-        Processes both questions (OA, WA, WANA) and bills (BI, BP).
+        Processes questions (OA, WA, WANA), bills (BI, BP), and statements (OS, WS).
+        Filters out procedural/short content for statements.
         """
-        all_valid_types = QUESTION_SECTION_TYPES | BILL_TYPES
-        
         for idx, section in enumerate(raw_sections):
             section_type = section.get('sectionType')
-            if section_type not in all_valid_types:
+            if section_type not in ALL_VALID_TYPES:
                 continue
             
             title = section.get('title', 'Untitled')
             content_html = section.get('content', '')
             if not content_html:
                 continue
+            
+            # Clean content
+            content_display = clean_html_for_display(content_html)
+            content_plain = strip_all_html(content_html)
+            
+            # For statements (OS, WS), filter out procedural/short content
+            if section_type in STATEMENT_TYPES:
+                # Check minimum length
+                if len(content_plain) < MIN_CONTENT_LENGTH:
+                    continue
+                
+                # Check for procedural keywords in title
+                title_lower = title.lower()
+                if any(keyword in title_lower for keyword in PROCEDURAL_KEYWORDS):
+                    continue
             
             # Extract and match speakers
             raw_speakers = self._extract_speakers_from_html(content_html)
@@ -208,16 +240,19 @@ class ParliamentSession:
                     if mp not in matched_speakers and mp.appointment != "Speaker":
                         matched_speakers.append(mp)
             
-            # Clean content
-            content_display = clean_html_for_display(content_html)
-            content_plain = strip_all_html(content_html)
-            
             # Construct source URL
             section_id = section.get('sectionId')
             source_url = f"https://sprs.parl.gov.sg/search/sprs3topic?reportid={section_id}" if section_id else None
             
             # Determine category
-            category = 'question' if section_type in QUESTION_SECTION_TYPES else 'bill'
+            if section_type in QUESTION_SECTION_TYPES:
+                category = 'question'
+            elif section_type in BILL_TYPES:
+                category = 'bill'
+            elif section_type in STATEMENT_TYPES:
+                category = 'statement'
+            else:
+                category = 'other'
             
             self.sections.append({
                 "section_type": section_type,
@@ -229,6 +264,7 @@ class ParliamentSession:
                 "order": idx,
                 "source_url": source_url
             })
+
 
     def get_sections(self):
         return self.sections

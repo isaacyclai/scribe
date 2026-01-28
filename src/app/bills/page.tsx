@@ -65,7 +65,7 @@ export default function BillsPage() {
                 </h2>
                 {loading ? (
                     <div className="flex items-center justify-center py-12">
-                        <div className="h-8 w-8 animate-spin rounded-full border-4 border-purple-500 border-t-transparent"></div>
+                        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
                     </div>
                 ) : bills.length === 0 ? (
                     <p className="py-12 text-center text-zinc-500">

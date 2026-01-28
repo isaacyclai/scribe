@@ -4,6 +4,7 @@ import { useState, useEffect, use } from 'react'
 import Link from 'next/link'
 import QuestionCard from '@/components/QuestionCard'
 import SearchBar from '@/components/SearchBar'
+import AISummaryCard from '@/components/AISummaryCard'
 import type { Section } from '@/types'
 
 // Helper to format ordinal numbers (1st, 2nd, 3rd, etc.)
@@ -32,6 +33,7 @@ interface SessionDetail {
     url: string
     summary: string | null
     questions: Section[]
+    statements: Section[]
     bills: Array<{
         billId: string
         sectionTitle: string
@@ -79,6 +81,11 @@ export default function SessionDetailPage({
     const filteredQuestions = session?.questions.filter(question =>
         question.sectionTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (question.contentPlain && question.contentPlain.toLowerCase().includes(searchQuery.toLowerCase()))
+    ) || []
+
+    const filteredStatements = session?.statements.filter(statement =>
+        statement.sectionTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (statement.contentPlain && statement.contentPlain.toLowerCase().includes(searchQuery.toLowerCase()))
     ) || []
 
     if (loading) {
@@ -141,25 +148,13 @@ export default function SessionDetailPage({
             </header>
 
             {/* Session Summary */}
-            {session.summary ? (
-                <section className="mb-8 rounded-lg border border-blue-200 bg-blue-50 p-5">
-                    <div className="mb-3 flex items-center justify-between">
-                        <h2 className="text-sm font-semibold uppercase text-blue-700">
-                            Session Summary
-                        </h2>
-                        <span className="text-xs text-blue-500">✨ AI Generated</span>
-                    </div>
-                    <p className="whitespace-pre-wrap text-zinc-700">
-                        {session.summary}
-                    </p>
-                </section>
-            ) : (
-                <section className="mb-8 rounded-lg border border-amber-200 bg-amber-50 p-4">
-                    <p className="text-sm italic text-amber-600">
-                        Session summary will be generated in a future update.
-                    </p>
-                </section>
-            )}
+            <div className="mb-8">
+                <AISummaryCard
+                    title="Session Summary"
+                    content={session.summary}
+                    fallbackMessage="Session summary will be generated in a future update."
+                />
+            </div>
 
             <div className="mb-8">
                 <SearchBar
@@ -267,6 +262,20 @@ export default function SessionDetailPage({
                                     </h3>
                                 </div>
                             </Link>
+                        ))}
+                    </div>
+                </section>
+            )}
+
+            {/* Ministerial Statements */}
+            {filteredStatements.length > 0 && (
+                <section className="mb-8">
+                    <h2 className="mb-4 text-xl font-semibold text-zinc-900">
+                        Ministerial Statements ({filteredStatements.length})
+                    </h2>
+                    <div className="grid gap-4 md:grid-cols-2">
+                        {filteredStatements.map((statement) => (
+                            <QuestionCard key={statement.id} question={statement} showDate={false} />
                         ))}
                     </div>
                 </section>

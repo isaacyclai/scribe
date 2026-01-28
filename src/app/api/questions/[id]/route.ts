@@ -19,6 +19,7 @@ export async function GET(
               s.content_plain as "contentPlain",
               s.section_order as "sectionOrder",
               s.source_url as "sourceUrl",
+              s.summary,
               m.id as "ministryId",
               m.acronym as ministry,
               m.name as "ministryName",
@@ -42,7 +43,7 @@ export async function GET(
             LEFT JOIN members mem ON ss.member_id = mem.id
             WHERE s.id = $1
             GROUP BY s.id, s.session_id, s.section_type, s.section_title, s.content_html,
-                     s.content_plain, s.section_order, s.source_url, m.id, m.acronym, m.name, sess.date, sess.sitting_no`,
+                     s.content_plain, s.section_order, s.source_url, s.summary, m.id, m.acronym, m.name, sess.date, sess.sitting_no`,
       [id]
     )
 
