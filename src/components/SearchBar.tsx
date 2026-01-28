@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 interface SearchBarProps {
     placeholder?: string
@@ -16,6 +16,7 @@ export default function SearchBar({
     defaultValue = '',
 }: SearchBarProps) {
     const [query, setQuery] = useState(defaultValue)
+    const isFirstRender = useRef(true)
 
     // Sync state if defaultValue changes (e.g. from parent or URL)
     useEffect(() => {
@@ -23,12 +24,23 @@ export default function SearchBar({
     }, [defaultValue])
 
     useEffect(() => {
+        // Skip the initial search call on mount
+        if (isFirstRender.current) {
+            isFirstRender.current = false
+            return
+        }
+
+        // Don't trigger search if query is already synced with parent (URL)
+        if (query === defaultValue) {
+            return
+        }
+
         const timer = setTimeout(() => {
             onSearch(query)
         }, debounceMs)
 
         return () => clearTimeout(timer)
-    }, [query, debounceMs, onSearch])
+    }, [query, debounceMs, onSearch, defaultValue])
 
     return (
         <div className="relative w-full max-w-xl">

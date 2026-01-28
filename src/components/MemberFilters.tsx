@@ -31,6 +31,16 @@ export default function MemberFilters({
 
     const updateFilters = useCallback((query: string, constituency: string, sort: string) => {
         const params = new URLSearchParams(searchParams.toString())
+
+        const currentQuery = searchParams.get('search') || ''
+        const currentConstituency = searchParams.get('constituency') || ''
+        const currentSort = searchParams.get('sort') || 'name'
+
+        // Only reset to page 1 if a filter has actually changed
+        if (query !== currentQuery || constituency !== currentConstituency || sort !== currentSort) {
+            params.delete('page')
+        }
+
         if (query) params.set('search', query)
         else params.delete('search')
 
@@ -40,7 +50,6 @@ export default function MemberFilters({
         if (sort !== 'name') params.set('sort', sort)
         else params.delete('sort')
 
-        params.delete('page')
         router.push(`/members?${params.toString()}`)
     }, [router, searchParams])
 
