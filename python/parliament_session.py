@@ -221,7 +221,6 @@ class ParliamentSession:
             # For statements (OS, WS), filter out procedural/short content
             if section_type in STATEMENT_TYPES:
                 # Check minimum length (except if it's explicitly adjournment motion)
-                # Adjournment motions can be short but meaningful
                 report_type = section.get('reportType', '')
                 is_adjournment = report_type == 'Matter Raised On Adjournment Motion'
                 

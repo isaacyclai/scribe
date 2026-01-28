@@ -7,7 +7,6 @@ export interface Session {
     volumeNo: number
     format: string
     url: string
-    summary: string | null
 }
 
 export interface Member {

@@ -1,4 +1,4 @@
-import React from 'react'
+import ReactMarkdown from 'react-markdown'
 
 interface AISummaryCardProps {
     title: string
@@ -43,13 +43,7 @@ export default function AISummaryCard({
                 </div>
             </div>
             <div className="prose prose-sm prose-blue max-w-none text-zinc-700">
-                {/* 
-                   We use simple whitespace rendering for now, 
-                   but could switch to markdown parsing if the AI generates markdown 
-                */}
-                <div className="whitespace-pre-wrap font-sans">
-                    {content}
-                </div>
+                <ReactMarkdown>{content}</ReactMarkdown>
             </div>
         </section>
     )

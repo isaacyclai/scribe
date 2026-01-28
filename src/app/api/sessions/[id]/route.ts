@@ -19,8 +19,7 @@ export async function GET(
               session_no as "sessionNo",
               volume_no as "volumeNo",
               format,
-              url,
-              summary
+              url
             FROM sessions 
             WHERE id = $1`,
       [id]

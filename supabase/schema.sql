@@ -8,7 +8,6 @@ CREATE TABLE sessions (
     volume_no INTEGER,
     format VARCHAR(10), -- 'new' or 'old'
     url TEXT,
-    summary TEXT, -- AI-generated summary of the entire session
     created_at TIMESTAMP DEFAULT NOW()
 );
 

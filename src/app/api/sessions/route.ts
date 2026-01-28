@@ -43,7 +43,6 @@ export async function GET(request: NextRequest) {
         s.volume_no as "volumeNo",
         s.format,
         s.url,
-        s.summary,
         COUNT(sec.id) as "questionCount"
       FROM sessions s
       LEFT JOIN sections sec ON s.id = sec.session_id

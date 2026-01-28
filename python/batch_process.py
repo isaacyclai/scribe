@@ -1,10 +1,11 @@
 import asyncio
+import re
 import os
 import sys
 import logging
 from datetime import datetime, timedelta
 from typing import List, Dict
-from google import genai
+from openai import AsyncOpenAI
 from dotenv import load_dotenv
 
 from hansard_api import HansardAPI
@@ -29,32 +30,44 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Constants
-GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
-PARALLEL_REQUESTS = 3  # Reduced max concurrent API/processing tasks
+GROQ_API_KEY = os.getenv('GROQ_API_KEY')
+PARALLEL_REQUESTS = 3
 DB_SEMAPHORE = asyncio.Semaphore(10) # Limit concurrent DB operations
+AI_SEMAPHORE = asyncio.Semaphore(1)  # Sequential AI requests for rate limiting
+AI_COOLDOWN = 2.5                    # Delay in seconds to achieve ~24-30 RPM and respect TPM
 
-async def get_gemini_client():
-    return genai.Client(api_key=GEMINI_API_KEY)
+async def get_ai_client():
+    return AsyncOpenAI(
+        base_url="https://api.groq.com/openai/v1",
+        api_key=GROQ_API_KEY,
+    )
 
-async def generate_summary(text: str, prompt_template: str, model='gemini-2.5-flash') -> str:
+async def generate_summary(text: str, prompt_template: str, model='llama-3.1-8b-instant') -> str:
     if not text:
         return None
         
-    client = await get_gemini_client()
-    try:
-        # Run synchronous generate_content in a thread executor to make it async-compatible
-        loop = asyncio.get_event_loop()
-        response = await loop.run_in_executor(
-            None,
-            lambda: client.models.generate_content(
+    async with AI_SEMAPHORE:
+        client = await get_ai_client()
+        try:
+            response = await client.chat.completions.create(
                 model=model,
-                contents=[{'parts': [{'text': prompt_template.format(text=text)}]}]
+                messages=[
+                    {"role": "user", "content": prompt_template.format(text=text)}
+                ],
             )
-        )
-        return response.text.strip()
-    except Exception as e:
-        logger.error(f"Error generating summary: {e}")
-        return None
+            # Add delay to respect 30 RPM limit
+            await asyncio.sleep(AI_COOLDOWN)
+            
+            content = response.choices[0].message.content.strip()
+            # Normalize whitespace: replace multiple spaces/tabs/non-breaking spaces 
+            # with single space but preserve newlines
+            content = re.sub(r'[ \t\xa0]+', ' ', content)
+            return content
+        except Exception as e:
+            logger.error(f"Error generating summary: {e}")
+            # Still wait on error to avoid rapid-fire failures hitting limits
+            await asyncio.sleep(AI_COOLDOWN)
+            return None
 
 async def ingest_session(date_str: str) -> str:
     logger.info(f"Processing session for {date_str}...")
@@ -225,81 +238,64 @@ async def generate_section_summaries_for_session(session_id):
     
     tasks = []
     for s in sections:
-        tasks.append(generate_single_section_summary(s))
+        if s['category'] == 'question':
+            tasks.append(generate_question_summary(s))
+        else:
+            tasks.append(generate_section_summary(s))
         
         # Batch to avoid hitting rate limits too hard
-        if len(tasks) >= 10:
+        if len(tasks) >= 5:
             await asyncio.gather(*tasks)
             tasks = []
             
     if tasks:
         await asyncio.gather(*tasks)
 
-async def generate_single_section_summary(section):
-    prompt = """You are summarizing a section from the Singapore Parliament hansard.
+async def generate_question_summary(section):
+    """Specialized summary for Parliamentary Questions."""
+    prompt = """You are summarizing a Parliamentary Question from the Singapore Parliament hansard.
     Title: {title}
     
     Content:
     {text}
     
-    Write a concise 1-paragraph summary of the key points discussed, questions asked, and answers given. 
-    Focus on facts and policy details. Avoid "The member asked..." and just state the question/issue directly.
+    Write a concise 5-line summary, that begins with "This question concerns...". Mention the question 
+    raised by the MP and the key points of the Minister's response. Focus on facts and policy details.
 
-    DO NOT include any information that is not included in the text.
+    DO NOT include any information that is not included in the text, such as any comments or descriptions of instructions from this prompt.
     """
     
     summary = await generate_summary(
-        f"Title: {section['section_title']}\n\n{section['content_plain'][:15000]}", 
-        prompt
+        section['content_plain'][:15000], 
+        prompt.replace('{title}', section['section_title'])
     )
     
     if summary:
-        await execute(
-            'UPDATE sections SET summary = $1 WHERE id = $2',
-            summary, section['id']
-        )
+        await execute('UPDATE sections SET summary = $1 WHERE id = $2', summary, section['id'])
 
-async def generate_session_summary(session_id):
-    """Generate overall session summary."""
-    sections = await execute(
-        '''SELECT s.section_type, s.section_title, m.acronym as ministry
-           FROM sections s
-           LEFT JOIN ministries m ON s.ministry_id = m.id
-           WHERE s.session_id = $1
-           ORDER BY s.section_order''',
-        session_id,
-        fetch=True
-    )
+async def generate_section_summary(section):
+    prompt = """You are summarizing a section (Motion, Statement, or Clarification) from the Singapore Parliament hansard.
+    Title: {title}
     
-    if not sections:
-        return
-        
-    section_lines = []
-    for s in sections:
-        ministry = f"[{s['ministry']}] " if s['ministry'] else ""
-        section_lines.append(f"- {ministry}{s['section_title']} ({s['section_type']})")
-        
-    context = "\n".join(section_lines)
-    
-    prompt = """Summarize this Singapore Parliament session into a 1-page executive briefing.
-    
-    Agenda Items:
+    Content:
     {text}
     
-    Write a structured summary highlighting the key bills passed, major questions answered, and significant speeches.
-    Use nested bullet points.
+    Write a concise 5-line summary of the key points discussed, arguments raised, and any conclusions or decisions reached.
+    Begin with "This motion/statement/clarification/etc. concerns..."
 
-    DO NOT include any information that is not included in the text.
+    DO NOT include any information that is not included in the text, such as any comments or descriptions of instructions from this prompt.
     """
     
-    summary = await generate_summary(context, prompt)
+    summary = await generate_summary(
+        section['content_plain'][:15000], 
+        prompt.replace('{title}', section['section_title'])
+    )
     
     if summary:
-        await execute('UPDATE sessions SET summary = $1 WHERE id = $2', summary, session_id)
-        logger.info(f"Generated session summary for {session_id}")
+        await execute('UPDATE sections SET summary = $1 WHERE id = $2', summary, section['id'])
+
 
 async def generate_bill_summaries():
-    """Generate summaries for bills that don't have them."""
     bills = await execute(
         'SELECT id, title FROM bills WHERE summary IS NULL',
         fetch=True
@@ -320,22 +316,24 @@ async def generate_bill_summaries():
             
         full_text = "\n\n".join([s['content_plain'] for s in sections])
         
-        prompt = """Summarize this Parliamentary Bill debate.
-        Bill: {title}
+        prompt = """You are summarizing a debate on a bill from the Singapore Parliament hansard.
+        Title: {title}
         
-        Debate Content:
+        Content:
         {text}
         
-        Provide a summary of:
-        1. The Bill's purpose
-        2. Key concerns raised by MPs
-        3. The Minister's response/justifications
+        Write a concise 1-paragraph summary of the key points discussed in this section. Do not just reproduce what
+        the questions and answers are. 
+        
+        Your summary should have three sections. Firstly, state the bill's purpose. Secondly, list the key concerns raised by MPs. 
+        Thirdly, list the Minister's response/justifications. Each section should be no longer than a few lines. The sections
+        should be delineated using markdown headers.
 
-        DO NOT include any information that is not included in the text.
+        DO NOT include any information that is not included in the text, such as any comments or descriptions of instructions from this prompt.
         """
         
         summary = await generate_summary(
-            full_text[:30000], # Trucate huge debates
+            full_text,
             prompt.replace('{title}', bill['title'])
         )
         
@@ -345,63 +343,58 @@ async def generate_bill_summaries():
 
 async def generate_member_summaries():
     logger.info("Generating member summaries...")
-    
-    # We update all members that have had recent activity or no summary
-    # For now, just re-run all (or optimize later)
+
     members = await execute('SELECT id, name FROM members', fetch=True)
     
     tasks = []
-    semaphore = asyncio.Semaphore(10)  # Rate limit
     
     async def process_member(member):
-        async with semaphore:
-            activity = await execute(
-                '''SELECT s.section_title, s.section_type, m.acronym as ministry,
-                          ss.designation, sess.date
-                   FROM section_speakers ss
-                   JOIN sections s ON ss.section_id = s.id
-                   JOIN sessions sess ON s.session_id = sess.id
-                   LEFT JOIN ministries m ON s.ministry_id = m.id
-                   WHERE ss.member_id = $1
-                   ORDER BY sess.date DESC
-                   LIMIT 20''',
-                member['id'],
-                fetch=True
+        activity = await execute(
+            '''SELECT s.section_title, s.section_type, m.acronym as ministry,
+                      ss.designation, sess.date
+               FROM section_speakers ss
+               JOIN sections s ON ss.section_id = s.id
+               JOIN sessions sess ON s.session_id = sess.id
+               LEFT JOIN ministries m ON s.ministry_id = m.id
+               WHERE ss.member_id = $1
+               ORDER BY sess.date DESC
+               LIMIT 20''',
+            member['id'],
+            fetch=True
+        )
+            
+        if not activity:
+            return
+            
+        activity_lines = []
+        recent_designation = activity[0]['designation'] or "MP"
+        
+        for a in activity:
+            ministry = f"[{a['ministry']}] " if a['ministry'] else ""
+            activity_lines.append(f"- {a['date']}: {ministry}{a['section_title']}")
+        
+        context = "\n".join(activity_lines)
+        
+        prompt = f"""Based on the recent parliamentary questions/statements by {member['name']} ({recent_designation}), provide a summary of their key focus areas.
+        
+        Recent Activity (Last 20 items):
+        {{text}}
+        
+        Identify the 3 topics most representative of their involvement in parliament, and write these out in 3 bullet points. For each topic, write a brief description
+        a no more than a few lines long that covers what they have asked..
+
+        DO NOT include any information that is not included in the text, such as any comments or descriptions of instructions from this prompt.
+        """
+        
+        summary = await generate_summary(context, prompt, model='llama-3.1-8b-instant')
+        
+        if summary:
+            await execute(
+                '''INSERT INTO member_summaries (member_id, summary, last_updated)
+                   VALUES ($1, $2, NOW())
+                   ON CONFLICT (member_id) DO UPDATE SET summary = EXCLUDED.summary, last_updated = NOW()''',
+                member['id'], summary
             )
-            
-            if not activity:
-                return
-                
-            activity_lines = []
-            recent_designation = activity[0]['designation'] or "MP"
-            
-            for a in activity:
-                ministry = f"[{a['ministry']}] " if a['ministry'] else ""
-                activity_lines.append(f"- {a['date']}: {ministry}{a['section_title']}")
-            
-            context = "\n".join(activity_lines)
-            
-            prompt = f"""Based on the recent parliamentary questions/statements by {member['name']} ({recent_designation}), provide a summary of their key focus areas.
-            
-            Recent Activity (Last 20 items):
-            {{text}}
-            
-            Task:
-            Identify the main topics and concerns raised by this member.
-            Format the output as a concise bulleted list (3-5 points).
-            Start each point with a bolded topic (e.g. **Topic**: Details).
-            DO NOT include any information that is not included in the text.
-            """
-            
-            summary = await generate_summary(context, prompt, model='gemini-2.5-flash-lite')
-            
-            if summary:
-                await execute(
-                    '''INSERT INTO member_summaries (member_id, summary, last_updated)
-                       VALUES ($1, $2, NOW())
-                       ON CONFLICT (member_id) DO UPDATE SET summary = EXCLUDED.summary, last_updated = NOW()''',
-                    member['id'], summary
-                )
     
     for m in members:
         tasks.append(process_member(m))
@@ -462,9 +455,6 @@ async def batch_process(start_date_str, end_date_str, skip_summaries=False, summ
         for sid in session_ids_to_process:
             await generate_section_summaries_for_session(sid)
             
-        # B. Session Summaries
-        for sid in session_ids_to_process:
-            await generate_session_summary(sid)
             
         # C. Bill Summaries
         await generate_bill_summaries()

@@ -4,7 +4,6 @@ import { useState, useEffect, use } from 'react'
 import Link from 'next/link'
 import QuestionCard from '@/components/QuestionCard'
 import SearchBar from '@/components/SearchBar'
-import AISummaryCard from '@/components/AISummaryCard'
 import type { Section } from '@/types'
 
 // Helper to format ordinal numbers (1st, 2nd, 3rd, etc.)
@@ -31,7 +30,7 @@ interface SessionDetail {
     volumeNo: number
     format: string
     url: string
-    summary: string | null
+
     questions: Section[]
     statements: Section[]
     bills: Array<{
@@ -218,14 +217,6 @@ export default function SessionDetailPage({
                 </div>
             </header>
 
-            {/* Session Summary */}
-            <div className="mb-8">
-                <AISummaryCard
-                    title="Session Summary"
-                    content={session.summary}
-                    fallbackMessage="Session summary will be generated in a future update."
-                />
-            </div>
 
             <div className="mb-8">
                 <SearchBar

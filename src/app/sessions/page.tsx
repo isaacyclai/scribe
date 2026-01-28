@@ -12,7 +12,6 @@ interface Session {
     volumeNo: number
     format: string
     url: string
-    summary: string | null
     questionCount: number
 }
 
@@ -141,11 +140,7 @@ export default function SessionsPage() {
                                     <div className="mb-2 text-sm text-zinc-500">
                                         {getOrdinal(session.parliament)} Parliament, {getOrdinal(session.sessionNo)} Session, {getOrdinal(session.sittingNo)} Sitting
                                     </div>
-                                    {session.summary && (
-                                        <p className="line-clamp-2 text-sm text-zinc-600">
-                                            {session.summary}
-                                        </p>
-                                    )}
+
                                 </Link>
                             ))}
 
