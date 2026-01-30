@@ -28,7 +28,7 @@ export async function GET(
         s.id,
         s.section_type as "sectionType",
         s.section_title as "sectionTitle",
-        s.content_plain as "contentPlain",
+        -- s.content_plain as "contentPlain", -- Optimization
         s.category,
         sess.date as "sessionDate",
         ARRAY_AGG(DISTINCT mem.name ORDER BY mem.name) as speakers
@@ -52,7 +52,7 @@ export async function GET(
 
         questionsSql += ` GROUP BY s.id, s.section_type, s.section_title, s.content_plain, s.category, sess.date, s.section_order
        ORDER BY sess.date DESC, s.section_order ASC
-       LIMIT 100`
+       LIMIT 1000`
 
         const questionsResult = await query(questionsSql, questionsParams)
 
@@ -78,7 +78,7 @@ export async function GET(
             bParamCount += 2
         }
 
-        billsSql += ` ORDER BY s.bill_id, sess.date DESC LIMIT 50`
+        billsSql += ` ORDER BY s.bill_id, sess.date DESC LIMIT 500`
 
         const billsResult = await query(billsSql, billsParams)
 

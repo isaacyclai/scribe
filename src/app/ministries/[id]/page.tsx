@@ -4,6 +4,7 @@ import { useState, useEffect, use } from 'react'
 import Link from 'next/link'
 import QuestionCard from '@/components/QuestionCard'
 import SearchBar from '@/components/SearchBar'
+import PaginatedList from '@/components/PaginatedList'
 import type { Section } from '@/types'
 
 interface Bill {
@@ -108,11 +109,13 @@ export default function MinistryDetailPage({
                     <h2 className="mb-4 text-xl font-semibold text-zinc-900">
                         Motions ({motions.length})
                     </h2>
-                    <div className="grid gap-4 md:grid-cols-2">
-                        {motions.map((motion) => (
+                    <PaginatedList
+                        items={motions}
+                        itemsPerPage={10}
+                        renderItem={(motion) => (
                             <QuestionCard key={motion.id} question={motion} />
-                        ))}
-                    </div>
+                        )}
+                    />
                 </section>
             )}
 
@@ -122,8 +125,10 @@ export default function MinistryDetailPage({
                     <h2 className="mb-4 text-xl font-semibold text-zinc-900">
                         Bills ({filteredBills.length})
                     </h2>
-                    <div className="grid gap-4 md:grid-cols-2">
-                        {filteredBills.map((bill) => (
+                    <PaginatedList
+                        items={filteredBills}
+                        itemsPerPage={10}
+                        renderItem={(bill) => (
                             <Link key={bill.billId} href={`/bills/${bill.billId}`}>
                                 <div className="group cursor-pointer rounded-lg border border-zinc-200 bg-white p-4 transition-all hover:border-purple-300 hover:shadow-md">
                                     <div className="mb-2 flex flex-wrap items-center gap-2">
@@ -143,8 +148,8 @@ export default function MinistryDetailPage({
                                     </h3>
                                 </div>
                             </Link>
-                        ))}
-                    </div>
+                        )}
+                    />
                 </section>
             )}
 
@@ -153,17 +158,14 @@ export default function MinistryDetailPage({
                 <h2 className="mb-4 text-xl font-semibold text-zinc-900">
                     Related Questions ({questions.length || 0})
                 </h2>
-                {questions.length === 0 ? (
-                    <p className="py-8 text-center text-zinc-500">
-                        {searchQuery ? 'No results found matching your search' : 'No questions found for this ministry'}
-                    </p>
-                ) : (
-                    <div className="grid gap-4 md:grid-cols-2">
-                        {questions.map((question) => (
-                            <QuestionCard key={question.id} question={question} />
-                        ))}
-                    </div>
-                )}
+                <PaginatedList
+                    items={questions}
+                    itemsPerPage={10}
+                    emptyMessage={searchQuery ? 'No results found matching your search' : 'No questions found for this ministry'}
+                    renderItem={(question) => (
+                        <QuestionCard key={question.id} question={question} />
+                    )}
+                />
             </section>
         </div>
     )

@@ -72,7 +72,7 @@ export async function GET(
               s.id,
               s.section_type as "sectionType",
               s.section_title as "sectionTitle",
-              s.content_plain as "contentPlain",
+              -- s.content_plain as "contentPlain", -- Optimization: Don't fetch full content
               s.category,
               m.acronym as ministry,
               sess.date as "sessionDate",
@@ -96,7 +96,7 @@ export async function GET(
       qParamCount += 2
     }
 
-    questionsSql += ` ORDER BY sess.date DESC, s.section_order ASC LIMIT 100`
+    questionsSql += ` ORDER BY sess.date DESC, s.section_order ASC LIMIT 1000`
 
     const questionsResult = await query(questionsSql, questionsParams)
 
@@ -125,7 +125,7 @@ export async function GET(
       bParamCount += 2
     }
 
-    billsSql += ` ORDER BY s.bill_id, sess.date DESC LIMIT 50`
+    billsSql += ` ORDER BY s.bill_id, sess.date DESC LIMIT 500`
 
     const billsResult = await query(billsSql, billsParams)
 
