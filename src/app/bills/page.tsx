@@ -24,6 +24,28 @@ export default async function BillsPage({
     const limit = 100
 
     // Get unified bills with their reading information
+
+
+    const sqlParams: (string | number)[] = []
+    let paramCount = 1
+
+    // Use a subquery to calculate rank for each bill based on its best matching section
+    let rankSelect = ''
+    let rankOrderBy = ''
+
+    if (search) {
+        sqlParams.push(search)
+        // Rank is either title match or max section match
+        rankSelect = `, (
+            SELECT MAX(ts_rank(to_tsvector('english', s_rank.content_plain), plainto_tsquery('english', $${paramCount})))
+            FROM sections s_rank
+            WHERE s_rank.bill_id = b.id
+        ) as doc_rank`
+        rankOrderBy = 'doc_rank DESC NULLS LAST,'
+        paramCount++
+    }
+
+    // Get unified bills with their reading information
     let sql = `
         SELECT 
             b.id,
@@ -41,13 +63,11 @@ export default async function BillsPage({
              JOIN sessions sess ON s.session_id = sess.id 
              WHERE s.bill_id = b.id AND s.section_type = 'BP' 
              ORDER BY sess.date LIMIT 1) as "secondReadingSessionId"
+            ${rankSelect}
         FROM bills b
         LEFT JOIN ministries m ON b.ministry_id = m.id
         WHERE 1=1
     `
-
-    const sqlParams: (string | number)[] = []
-    let paramCount = 1
 
     if (search) {
         sql += ` AND (
@@ -55,14 +75,14 @@ export default async function BillsPage({
             EXISTS (
                 SELECT 1 FROM sections s_search 
                 WHERE s_search.bill_id = b.id 
-                AND to_tsvector('english', s_search.content_plain) @@ plainto_tsquery('english', $${paramCount + 1})
+                AND to_tsvector('english', s_search.content_plain) @@ plainto_tsquery('english', $${1}) -- reuse first param for query
             )
         )`
-        sqlParams.push(`%${search}%`, search)
-        paramCount += 2
+        sqlParams.push(`%${search}%`)
+        paramCount++
     }
 
-    sql += ` ORDER BY COALESCE(b.first_reading_date, 
+    sql += ` ORDER BY ${rankOrderBy} COALESCE(b.first_reading_date, 
                  (SELECT MIN(sess.date) FROM sections s 
                   JOIN sessions sess ON s.session_id = sess.id 
                   WHERE s.bill_id = b.id)) DESC NULLS LAST

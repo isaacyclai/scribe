@@ -5,10 +5,21 @@ import { query } from '@/lib/db'
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
   const search = searchParams.get('search') || ''
+  const sort = searchParams.get('sort') || 'relevance'
   const ministry = searchParams.get('ministry')
   const sectionType = searchParams.get('sectionType')
   const memberId = searchParams.get('memberId')
   const limit = parseInt(searchParams.get('limit') || '50')
+
+  const params: (string | number)[] = []
+  let paramCount = 1
+
+  let rankClause = ''
+  if (search) {
+    params.push(search)
+    rankClause = `, ts_rank(to_tsvector('english', s.content_plain), plainto_tsquery('english', $${paramCount})) as rank`
+    paramCount++
+  }
 
   let sql = `
     SELECT 
@@ -33,6 +44,7 @@ export async function GET(request: NextRequest) {
         ) FILTER (WHERE mem.id IS NOT NULL),
         '[]'
       ) as speakers
+      ${rankClause}
     FROM sections s
     JOIN sessions sess ON s.session_id = sess.id
     LEFT JOIN ministries m ON s.ministry_id = m.id
@@ -42,16 +54,13 @@ export async function GET(request: NextRequest) {
       AND s.section_type NOT IN ('BI', 'BP')
   `
 
-  const params: (string | number)[] = []
-  let paramCount = 1
-
   if (search) {
     sql += ` AND (
-      to_tsvector('english', s.content_plain) @@ plainto_tsquery('english', $${paramCount}) OR 
-      s.section_title ILIKE $${paramCount + 1}
+      to_tsvector('english', s.content_plain) @@ plainto_tsquery('english', $${1}) OR 
+      s.section_title ILIKE $${paramCount}
     )`
-    params.push(search, `%${search}%`)
-    paramCount += 2
+    params.push(`%${search}%`)
+    paramCount++
   }
 
   if (ministry && ministry !== 'all') {
@@ -74,8 +83,17 @@ export async function GET(request: NextRequest) {
 
   sql += ` GROUP BY s.id, s.session_id, s.section_type, s.section_title, 
            s.section_order, m.acronym, m.id, sess.date, sess.sitting_no
-           ORDER BY sess.date DESC, s.section_order ASC 
-           LIMIT $${paramCount}`
+           ${search ? ', rank' : ''}`
+
+  // Determine sort order
+  let orderBy = 'sess.date DESC, s.section_order ASC'
+  if (sort === 'oldest') {
+    orderBy = 'sess.date ASC, s.section_order ASC'
+  } else if (sort === 'relevance' && search) {
+    orderBy = 'rank DESC, sess.date DESC, s.section_order ASC'
+  }
+
+  sql += ` ORDER BY ${orderBy} LIMIT $${paramCount}`
   params.push(limit)
 
   try {

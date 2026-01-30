@@ -10,7 +10,18 @@ export default async function QuestionsPage({
 }) {
     const params = await searchParams
     const search = typeof params.search === 'string' ? params.search : ''
+    const sort = typeof params.sort === 'string' ? params.sort : 'relevance'
     const limit = 50
+
+    const sqlParams: (string | number)[] = []
+    let paramCount = 1
+
+    let rankClause = ''
+    if (search) {
+        sqlParams.push(search)
+        rankClause = `, ts_rank(to_tsvector('english', s.content_plain), plainto_tsquery('english', $${paramCount})) as rank`
+        paramCount++
+    }
 
     let sql = `
         SELECT 
@@ -36,6 +47,7 @@ export default async function QuestionsPage({
                 ) FILTER (WHERE mem.id IS NOT NULL),
                 '[]'
             ) as speakers
+            ${rankClause}
         FROM sections s
         JOIN sessions sess ON s.session_id = sess.id
         LEFT JOIN ministries m ON s.ministry_id = m.id
@@ -45,21 +57,27 @@ export default async function QuestionsPage({
             AND s.section_type NOT IN ('BI', 'BP')
     `
 
-    const sqlParams: (string | number)[] = []
-    let paramCount = 1
-
     if (search) {
         sql += ` AND (
-            to_tsvector('english', s.content_plain) @@ plainto_tsquery('english', $${paramCount}) OR 
-            s.section_title ILIKE $${paramCount + 1}
+            to_tsvector('english', s.content_plain) @@ plainto_tsquery('english', $1) OR 
+            s.section_title ILIKE $${paramCount}
         )`
-        sqlParams.push(search, `%${search}%`)
-        paramCount += 2
+        sqlParams.push(`%${search}%`)
+        paramCount++
+    }
+
+    // Determine sort order
+    let orderBy = 'sess.date DESC, s.section_order ASC'
+    if (sort === 'oldest') {
+        orderBy = 'sess.date ASC, s.section_order ASC'
+    } else if (sort === 'relevance' && search) {
+        orderBy = 'rank DESC, sess.date DESC, s.section_order ASC'
     }
 
     sql += ` GROUP BY s.id, s.session_id, s.section_type, s.section_title, 
              s.category, s.section_order, m.acronym, m.id, sess.date, sess.sitting_no
-             ORDER BY sess.date DESC, s.section_order ASC 
+             ${search ? ', rank' : ''}
+             ORDER BY ${orderBy} 
              LIMIT $${paramCount}`
     sqlParams.push(limit)
 

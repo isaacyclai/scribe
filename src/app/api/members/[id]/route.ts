@@ -8,6 +8,7 @@ export async function GET(
   const { id } = await params
   const searchParams = request.nextUrl.searchParams
   const search = searchParams.get('search') || ''
+  const sort = searchParams.get('sort') || 'relevance'
 
   try {
     // Get member info with summary and most recent designation/constituency
@@ -68,6 +69,17 @@ export async function GET(
     const member = memberResult.rows[0]
 
     // Get questions this member spoke in (excluding bills)
+    // Get questions this member spoke in (excluding bills)
+    const questionsParams: (string | number)[] = [id]
+    let qParamCount = 2
+    let qRankSelect = ''
+
+    if (search) {
+      questionsParams.push(search)
+      qRankSelect = `, ts_rank(to_tsvector('english', s.content_plain), plainto_tsquery('english', $${qParamCount})) as rank`
+      qParamCount++
+    }
+
     let questionsSql = `SELECT 
               s.id,
               s.section_type as "sectionType",
@@ -78,54 +90,88 @@ export async function GET(
               sess.date as "sessionDate",
               ss.designation,
               ss.constituency
+              ${qRankSelect}
             FROM section_speakers ss
             JOIN sections s ON ss.section_id = s.id
             JOIN sessions sess ON s.session_id = sess.id
             LEFT JOIN ministries m ON s.ministry_id = m.id
             WHERE ss.member_id = $1 AND s.section_type NOT IN ('BI', 'BP')`
 
-    const questionsParams: (string | number)[] = [id]
-    let qParamCount = 2
-
     if (search) {
       questionsSql += ` AND (
-            to_tsvector('english', s.content_plain) @@ plainto_tsquery('english', $${qParamCount}) OR 
-            s.section_title ILIKE $${qParamCount + 1}
+            to_tsvector('english', s.content_plain) @@ plainto_tsquery('english', $${qParamCount - 1}) OR 
+            s.section_title ILIKE $${qParamCount}
         )`
-      questionsParams.push(search, `%${search}%`)
-      qParamCount += 2
+      questionsParams.push(`%${search}%`)
+      qParamCount++
     }
 
-    questionsSql += ` ORDER BY sess.date DESC, s.section_order ASC LIMIT 1000`
+    // Determine order clause for questions
+    let qOrderBy = 'sess.date DESC, s.section_order ASC'
+    if (sort === 'oldest') {
+      qOrderBy = 'sess.date ASC, s.section_order ASC'
+    } else if (sort === 'relevance' && search) {
+      qOrderBy = 'rank DESC, sess.date DESC, s.section_order ASC'
+    }
+
+    questionsSql += ` ORDER BY ${qOrderBy} LIMIT 1000`
 
     const questionsResult = await query(questionsSql, questionsParams)
 
     // Get bills this member is involved in (BP sections only, with bill_id for linking)
-    let billsSql = `SELECT DISTINCT ON (s.bill_id)
-              s.bill_id as "billId",
-              s.section_type as "sectionType",
-              s.section_title as "sectionTitle",
-              m.acronym as ministry,
-              sess.date as "sessionDate"
-            FROM section_speakers ss
-            JOIN sections s ON ss.section_id = s.id
-            JOIN sessions sess ON s.session_id = sess.id
-            LEFT JOIN ministries m ON s.ministry_id = m.id
-            WHERE ss.member_id = $1 AND s.section_type = 'BP' AND s.bill_id IS NOT NULL`
-
     const billsParams: (string | number)[] = [id]
     let bParamCount = 2
+    let bRankSelect = ''
+
+    if (search) {
+      billsParams.push(search)
+      bRankSelect = `, ts_rank(to_tsvector('english', s.content_plain), plainto_tsquery('english', $${bParamCount})) as rank`
+      bParamCount++
+    }
+
+    // Inner query to get distinct bills with rank
+    let billsSql = `
+        SELECT DISTINCT ON (s.bill_id)
+            s.bill_id as "billId",
+            s.section_type as "sectionType",
+            s.section_title as "sectionTitle",
+            m.acronym as ministry,
+            sess.date as "sessionDate"
+            ${bRankSelect}
+        FROM section_speakers ss
+        JOIN sections s ON ss.section_id = s.id
+        JOIN sessions sess ON s.session_id = sess.id
+        LEFT JOIN ministries m ON s.ministry_id = m.id
+        WHERE ss.member_id = $1 AND s.section_type = 'BP' AND s.bill_id IS NOT NULL`
 
     if (search) {
       billsSql += ` AND (
-            to_tsvector('english', s.content_plain) @@ plainto_tsquery('english', $${bParamCount}) OR 
-            s.section_title ILIKE $${bParamCount + 1}
+            to_tsvector('english', s.content_plain) @@ plainto_tsquery('english', $${bParamCount - 1}) OR 
+            s.section_title ILIKE $${bParamCount}
         )`
-      billsParams.push(search, `%${search}%`)
-      bParamCount += 2
+      billsParams.push(`%${search}%`)
+      bParamCount++
     }
 
-    billsSql += ` ORDER BY s.bill_id, sess.date DESC LIMIT 500`
+    // Determine sort for bills
+    let bOrderBy = 's.bill_id, sess.date DESC'
+    let bFinalOrderBy = 's.bill_id, sess.date DESC' // default without subquery
+
+    if (sort === 'oldest') {
+      bOrderBy = 's.bill_id, sess.date ASC'
+      bFinalOrderBy = '"sessionDate" ASC'
+    } else if (sort === 'relevance' && search) {
+      bOrderBy = 's.bill_id, rank DESC, sess.date DESC'
+      bFinalOrderBy = 'rank DESC, "sessionDate" DESC'
+    } else {
+      // newest / default
+      bOrderBy = 's.bill_id, sess.date DESC'
+      bFinalOrderBy = '"sessionDate" DESC'
+    }
+
+    // Wrap in subquery to sort correctly after DISTINCT ON
+    billsSql = `SELECT * FROM (${billsSql} ORDER BY ${bOrderBy}) as sub 
+                ORDER BY ${bFinalOrderBy} LIMIT 500`
 
     const billsResult = await query(billsSql, billsParams)
 
