@@ -1,23 +1,26 @@
-
 import asyncio
-import os
+import sys
+from datetime import datetime
 from dotenv import load_dotenv
-from db_async import execute
+from db_async import execute, close_pool
 
 load_dotenv()
 
-async def cleanup():
+async def cleanup(start_date_str, end_date_str):
+    start_date = datetime.strptime(start_date_str, '%d-%m-%Y').date()
+    end_date = datetime.strptime(end_date_str, '%d-%m-%Y').date()
+
     # 1. Get Session IDs for the date range
     session_query = """
     SELECT id, date 
     FROM sessions 
-    WHERE date >= '2025-09-22' AND date <= '2025-09-26'
+    WHERE date >= $1 AND date <= $2
     """
-    sessions = await execute(session_query, fetch=True)
+    sessions = await execute(session_query, start_date, end_date, fetch=True)
     session_ids = [str(row['id']) for row in sessions]
     
     if not sessions:
-        print("No sessions found in range.")
+        print(f"No sessions found in range {start_date_str} to {end_date_str}.")
         return
 
     print(f"Cleaning duplicates in {len(sessions)} sessions...")
@@ -42,15 +45,19 @@ async def cleanup():
     );
     """
     
-    # Execute the cleanup
-    # We need to pass the list of UUIDs correctly
-    # asyncpg expects a list for ARRAY types
-    
     print("Executing cleanup query...")
-    # execute returns the status string, e.g., "DELETE 150"
     status = await execute(cleanup_query, session_ids)
     
     print(f"Cleanup complete. DB Status: {status}")
+    await close_pool()
 
 if __name__ == "__main__":
-    asyncio.run(cleanup())
+    if len(sys.argv) < 2:
+        print("Usage: uv run cleanup_duplicates.py START_DATE [END_DATE]")
+        print("Example: uv run cleanup_duplicates.py 22-09-2025")
+        sys.exit(1)
+        
+    start = sys.argv[1]
+    end = sys.argv[2] if len(sys.argv) > 2 else start
+    
+    asyncio.run(cleanup(start, end))

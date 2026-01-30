@@ -38,11 +38,6 @@ async def fetchone(query, *args):
     async with pool.acquire() as conn:
         return await conn.fetchrow(query, *args)
 
-async def fetchval(query, *args):
-    pool = await get_pool()
-    async with pool.acquire() as conn:
-        return await conn.fetchval(query, *args)
-
 async def find_or_create_member(name):
     pool = await get_pool()
     async with pool.acquire() as conn:
@@ -122,13 +117,7 @@ async def add_session_attendance(session_id, member_id, present=True, constituen
         session_id, member_id, present, constituency, designation
     )
 
-async def refresh_member_list_view():
-    print('Refreshing member_list_view...')
-    await execute('REFRESH MATERIALIZED VIEW CONCURRENTLY member_list_view')
-    print('Done!')
 
-
-# Test
 if __name__ == '__main__':
     async def test():
         result = await fetchone('SELECT NOW() as now')
