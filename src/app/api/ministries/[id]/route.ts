@@ -44,11 +44,11 @@ export async function GET(
         sess.date as "sessionDate",
         ARRAY_AGG(DISTINCT mem.name ORDER BY mem.name) as speakers
         ${qRankSelect}
-       FROM sections s
-       JOIN sessions sess ON s.session_id = sess.id
-       LEFT JOIN section_speakers ss ON s.id = ss.section_id
-       LEFT JOIN members mem ON ss.member_id = mem.id
-       WHERE s.ministry_id = $1 AND s.section_type NOT IN ('BI', 'BP')`
+        FROM sections s
+        JOIN sessions sess ON s.session_id = sess.id
+        LEFT JOIN section_speakers ss ON s.id = ss.section_id
+        LEFT JOIN members mem ON ss.member_id = mem.id
+        WHERE s.ministry_id = $1 AND s.section_type NOT IN ('BI', 'BP')`
 
         if (search) {
             questionsSql += ` AND (
@@ -60,8 +60,8 @@ export async function GET(
         }
 
         questionsSql += ` GROUP BY s.id, s.section_type, s.section_title, s.content_plain, s.category, sess.date, s.section_order ${search ? ', rank' : ''}
-       ORDER BY ${search ? 'rank DESC,' : ''} sess.date DESC, s.section_order ASC
-       LIMIT 1000`
+        ORDER BY ${search ? 'rank DESC,' : ''} sess.date DESC, s.section_order ASC
+        LIMIT 1000`
 
         const questionsResult = await query(questionsSql, questionsParams)
 
@@ -82,22 +82,22 @@ export async function GET(
         s.section_title as "sectionTitle",
         sess.date as "sessionDate"
         ${bRankSelect}
-       FROM sections s
-       JOIN sessions sess ON s.session_id = sess.id
-       WHERE s.ministry_id = $1 AND s.section_type = 'BP' AND s.bill_id IS NOT NULL`
+        FROM sections s
+        JOIN sessions sess ON s.session_id = sess.id
+        WHERE s.ministry_id = $1 AND s.section_type = 'BP' AND s.bill_id IS NOT NULL`
 
         if (search) {
             billsSql += ` AND (
             to_tsvector('english', s.content_plain) @@ plainto_tsquery('english', $${bParamCount - 1}) OR 
             s.section_title ILIKE $${bParamCount}
-        )`
+            )`
             billsParams.push(`%${search}%`)
             bParamCount++
         }
 
         if (search) {
             billsSql = `SELECT * FROM (${billsSql} ORDER BY s.bill_id, rank DESC, sess.date DESC) as sub
-                         ORDER BY rank DESC, "sessionDate" DESC LIMIT 500`
+                        ORDER BY rank DESC, "sessionDate" DESC LIMIT 500`
         } else {
             billsSql += ` ORDER BY s.bill_id, sess.date DESC LIMIT 500`
         }

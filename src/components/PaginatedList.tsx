@@ -36,8 +36,6 @@ export default function PaginatedList<T>({
 
     const handlePageChange = (page: number) => {
         setCurrentPage(page)
-        // Optional: Scroll to top of list?
-        // window.scrollTo({ top: 0, behavior: 'smooth' })
     }
 
     const getPageNumbers = () => {
@@ -92,8 +90,8 @@ export default function PaginatedList<T>({
                                     key={page}
                                     onClick={() => handlePageChange(page as number)}
                                     className={`rounded-md px-3 py-1 text-sm font-medium transition-colors ${currentPage === page
-                                            ? 'bg-blue-600 text-white'
-                                            : 'border border-zinc-200 hover:bg-zinc-50 text-zinc-700'
+                                        ? 'bg-blue-600 text-white'
+                                        : 'border border-zinc-200 hover:bg-zinc-50 text-zinc-700'
                                         }`}
                                 >
                                     {page}

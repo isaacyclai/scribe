@@ -9,8 +9,6 @@ const QUESTION_TYPE_LABELS: Record<string, string> = {
     'OA': 'Oral Answer to Oral Question',
     'WA': 'Written Answer',
     'WANA': 'Written Answer to Oral Question not answered by end of Question Time',
-    'OS': 'Motion',
-    'BP': 'Bill',
 }
 
 interface QuestionDetail extends Section {
@@ -65,12 +63,7 @@ export default function QuestionDetailPage({
     const typeLabel = QUESTION_TYPE_LABELS[question.sectionType] || question.sectionType
     const speakers = Array.isArray(question.speakers) ? question.speakers : []
 
-    const isMotion = question.category === 'motion' || question.category === 'statement' || (!question.category && question.sectionType === 'OS')
-    const isBill = ['BP', 'BI'].includes(question.sectionType)
-
     let badgeColorClass = "bg-blue-100 text-blue-700"
-    if (isMotion) badgeColorClass = "bg-pink-100 text-pink-700"
-    else if (isBill) badgeColorClass = "bg-purple-100 text-purple-700"
 
     return (
         <div className="mx-auto max-w-4xl">

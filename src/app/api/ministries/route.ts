@@ -5,15 +5,15 @@ import { query } from '@/lib/db'
 export async function GET() {
     try {
         const result = await query(`
-      SELECT 
+        SELECT 
         m.id,
         m.name,
         m.acronym,
         COUNT(s.id) as "sectionCount"
-      FROM ministries m
-      LEFT JOIN sections s ON m.id = s.ministry_id
-      GROUP BY m.id, m.name, m.acronym
-      ORDER BY m.name ASC
+        FROM ministries m
+        LEFT JOIN sections s ON m.id = s.ministry_id
+        GROUP BY m.id, m.name, m.acronym
+        ORDER BY m.name ASC
     `)
         return NextResponse.json(result.rows, {
             headers: {
