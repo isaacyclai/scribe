@@ -47,6 +47,8 @@ export default async function MembersPage({
     let orderBy = 'mv.name ASC'
     if (sort === 'involvements') {
         orderBy = 'mv.section_count DESC, mv.name ASC'
+    } else if (sort === 'attendance') {
+        orderBy = 'CASE WHEN sa.total > 0 THEN CAST(sa.present AS FLOAT) / sa.total ELSE 0 END DESC, mv.name ASC'
     }
 
     const sql = `
@@ -57,8 +59,15 @@ export default async function MembersPage({
         mv.section_count as "sectionCount",
         mv.constituency,
         mv.designation,
+        sa.total as "attendanceTotal",
+        sa.present as "attendancePresent",
         COUNT(*) OVER() as "totalCount"
       FROM member_list_view mv
+      LEFT JOIN (
+        SELECT member_id, COUNT(*) as total, SUM(CASE WHEN present THEN 1 ELSE 0 END) as present
+        FROM session_attendance 
+        GROUP BY member_id
+      ) sa ON mv.id = sa.member_id
       WHERE ${whereClause}
       ORDER BY ${orderBy}
       LIMIT $${paramCount} OFFSET $${paramCount + 1}
@@ -69,7 +78,9 @@ export default async function MembersPage({
     const totalPages = Math.ceil(totalCount / limit)
     const members: Member[] = dataResult.rows.map(({ totalCount, ...rest }) => ({
         ...rest,
-        sectionCount: parseInt(rest.sectionCount)
+        sectionCount: parseInt(rest.sectionCount),
+        attendanceTotal: rest.attendanceTotal ? parseInt(rest.attendanceTotal) : 0,
+        attendancePresent: rest.attendancePresent ? parseInt(rest.attendancePresent) : 0
     }))
 
     return (

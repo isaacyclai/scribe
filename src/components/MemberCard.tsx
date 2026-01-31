@@ -27,6 +27,11 @@ export default function MemberCard({ member }: MemberCardProps) {
                             {member.constituency}
                         </span>
                     )}
+                    {(member.attendanceTotal || 0) > 0 && (
+                        <span className="rounded bg-blue-50 px-1.5 py-0.5 text-xs text-blue-700">
+                            {Math.round(((member.attendancePresent || 0) / (member.attendanceTotal || 1)) * 100)}% Attended
+                        </span>
+                    )}
                 </div>
             )}
         </Link>

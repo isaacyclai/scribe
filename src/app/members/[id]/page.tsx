@@ -22,6 +22,16 @@ interface MemberDetail {
     summary: string | null
     constituency: string | null
     designation: string | null
+    attendance?: {
+        total: number
+        present: number
+        history: Array<{
+            sessionId: string
+            date: string
+            present: boolean
+            sittingNo: number
+        }>
+    }
     questions: Section[]
     bills: Bill[]
 }
@@ -36,6 +46,8 @@ export default function MemberDetailPage({
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [searchQuery, setSearchQuery] = useState('')
+    const [showAttendanceHistory, setShowAttendanceHistory] = useState(false)
+    const [attendancePage, setAttendancePage] = useState(1)
 
     useEffect(() => {
         async function fetchMember() {
@@ -103,6 +115,96 @@ export default function MemberDetailPage({
                             <span className="rounded bg-zinc-100 px-2 py-1 text-sm text-zinc-600">
                                 {member.constituency}
                             </span>
+                        )}
+                        {member.attendance && member.attendance.total > 0 && (
+                            <div className="relative">
+                                <button
+                                    onClick={() => setShowAttendanceHistory(!showAttendanceHistory)}
+                                    className="flex items-center gap-2 rounded bg-blue-50 px-2 py-1 text-sm text-blue-700 hover:bg-blue-100"
+                                    title="Click to view full attendance history"
+                                >
+                                    <span>
+                                        Attendance: {Math.round((member.attendance.present / member.attendance.total) * 100)}% ({member.attendance.present}/{member.attendance.total})
+                                    </span>
+                                    <svg
+                                        className={`h-4 w-4 transition-transform ${showAttendanceHistory ? 'rotate-180' : ''}`}
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </button>
+
+                                {showAttendanceHistory && (
+                                    <div className="absolute left-0 top-full z-10 mt-2 w-72 rounded-lg border border-zinc-200 bg-white p-4 shadow-lg ring-1 ring-black ring-opacity-5">
+                                        <h3 className="mb-3 text-sm font-semibold text-zinc-900">Attendance History</h3>
+                                        <div className="max-h-60 overflow-y-auto pr-1">
+                                            <div className="space-y-2">
+                                                {(member.attendance.history || [])
+                                                    .slice((attendancePage - 1) * 10, attendancePage * 10)
+                                                    .map((record) => (
+                                                        <Link
+                                                            key={record.sessionId}
+                                                            href={`/sessions/${record.sessionId}`}
+                                                            className="flex items-center justify-between rounded p-2 text-sm hover:bg-zinc-50"
+                                                        >
+                                                            <span className="text-zinc-600">
+                                                                {new Date(record.date).toLocaleDateString('en-SG', {
+                                                                    day: 'numeric',
+                                                                    month: 'short',
+                                                                    year: 'numeric'
+                                                                })}
+                                                            </span>
+                                                            {record.present ? (
+                                                                <span className="flex items-center gap-1 text-green-600">
+                                                                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                                    </svg>
+                                                                    <span className="text-xs font-medium">Present</span>
+                                                                </span>
+                                                            ) : (
+                                                                <span className="flex items-center gap-1 text-red-500">
+                                                                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                                    </svg>
+                                                                    <span className="text-xs font-medium">Absent</span>
+                                                                </span>
+                                                            )}
+                                                        </Link>
+                                                    ))}
+                                            </div>
+                                        </div>
+                                        <div className="mt-3 flex items-center justify-between text-xs border-t border-zinc-100 pt-3">
+                                            <button
+                                                disabled={attendancePage === 1}
+                                                onClick={() => setAttendancePage(p => p - 1)}
+                                                className="rounded px-2 py-1 hover:bg-zinc-100 disabled:opacity-50 disabled:hover:bg-transparent"
+                                            >
+                                                Previous
+                                            </button>
+                                            <select
+                                                value={attendancePage}
+                                                onChange={(e) => setAttendancePage(Number(e.target.value))}
+                                                className="rounded border-none bg-transparent py-0 pl-1 pr-6 text-xs text-zinc-500 hover:text-zinc-700 focus:ring-0 cursor-pointer"
+                                            >
+                                                {Array.from({ length: Math.ceil((member.attendance?.history || []).length / 10) }, (_, i) => i + 1).map(page => (
+                                                    <option key={page} value={page}>
+                                                        Page {page} of {Math.ceil((member.attendance?.history || []).length / 10)}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                            <button
+                                                disabled={attendancePage >= Math.ceil((member.attendance?.history || []).length / 10)}
+                                                onClick={() => setAttendancePage(p => p + 1)}
+                                                className="rounded px-2 py-1 hover:bg-zinc-100 disabled:opacity-50 disabled:hover:bg-transparent"
+                                            >
+                                                Next
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         )}
                     </div>
                 )}

@@ -92,7 +92,8 @@ export default function MemberFilters({
                     className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 sm:w-48"
                 >
                     <option value="name">Name (A-Z)</option>
-                    <option value="involvements">Most Active</option>
+                    <option value="involvements"> Most involvements</option>
+                    <option value="attendance">Highest attendance</option>
                 </select>
             </div>
         </div>

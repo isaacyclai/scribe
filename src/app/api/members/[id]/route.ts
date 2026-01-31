@@ -68,7 +68,29 @@ export async function GET(
 
     const member = memberResult.rows[0]
 
-    // Get questions this member spoke in (excluding bills)
+    // Get attendance history separately
+    const attendanceResult = await query(
+      `SELECT 
+        sa.session_id as "sessionId",
+        sa.present,
+        s.date,
+        s.sitting_no as "sittingNo"
+      FROM session_attendance sa
+      JOIN sessions s ON sa.session_id = s.id
+      WHERE sa.member_id = $1
+      ORDER BY s.date DESC`,
+      [id]
+    )
+
+    const attendanceHistory = attendanceResult.rows
+    const attendanceTotal = attendanceHistory.length
+    const attendancePresent = attendanceHistory.filter(r => r.present).length
+
+    const attendance = {
+      total: attendanceTotal,
+      present: attendancePresent,
+      history: attendanceHistory
+    }
     // Get questions this member spoke in (excluding bills)
     const questionsParams: (string | number)[] = [id]
     let qParamCount = 2
@@ -177,6 +199,7 @@ export async function GET(
 
     return NextResponse.json({
       ...member,
+      attendance,
       questions: questionsResult.rows,
       bills: billsResult.rows
     }, {

@@ -16,6 +16,8 @@ export interface Member {
     sectionCount?: number
     constituency?: string | null
     designation?: string | null
+    attendanceTotal?: number
+    attendancePresent?: number
 }
 
 export interface Ministry {
