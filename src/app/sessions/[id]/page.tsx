@@ -4,6 +4,7 @@ import { useState, useEffect, use } from 'react'
 import Link from 'next/link'
 import QuestionCard from '@/components/QuestionCard'
 import SearchBar from '@/components/SearchBar'
+import PaginatedList from '@/components/PaginatedList'
 import type { Section } from '@/types'
 
 // Helper to format ordinal numbers (1st, 2nd, 3rd, etc.)
@@ -44,70 +45,7 @@ interface SessionDetail {
     attendees: Attendee[]
 }
 
-function ExpandableSection<T>({
-    title,
-    items,
-    renderItem,
-    emptyMessage,
-    initialCount = 10
-}: {
-    title: string
-    items: T[]
-    renderItem: (item: T) => React.ReactNode
-    emptyMessage: string
-    initialCount?: number
-}) {
-    const [expanded, setExpanded] = useState(false)
 
-    // If empty, show empty message section
-    if (items.length === 0) {
-        return (
-            <section className="mb-8">
-                <h2 className="mb-4 text-xl font-semibold text-zinc-900">{title} (0)</h2>
-                <p className="py-8 text-center text-zinc-500">{emptyMessage}</p>
-            </section>
-        )
-    }
-
-    const displayedItems = expanded ? items : items.slice(0, initialCount)
-    const remaining = items.length - displayedItems.length
-
-    return (
-        <section className="mb-8">
-            <h2 className="mb-4 text-xl font-semibold text-zinc-900">
-                {title} ({items.length})
-            </h2>
-            <div className="grid gap-4 md:grid-cols-2">
-                {displayedItems.map(renderItem)}
-            </div>
-
-            {items.length > initialCount && (
-                <div className="mt-4 flex justify-center">
-                    <button
-                        onClick={() => setExpanded(!expanded)}
-                        className="flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-600 shadow-sm transition-colors hover:bg-zinc-50 hover:text-zinc-900"
-                    >
-                        {expanded ? (
-                            <>
-                                <span>Show Less</span>
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 rotate-180" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                                </svg>
-                            </>
-                        ) : (
-                            <>
-                                <span>Show {remaining} More</span>
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                                </svg>
-                            </>
-                        )}
-                    </button>
-                </div>
-            )}
-        </section>
-    )
-}
 
 export default function SessionDetailPage({
     params,
@@ -295,81 +233,106 @@ export default function SessionDetailPage({
 
             {/* Motions */}
             {motions.length > 0 && (
-                <ExpandableSection
-                    title="Motions"
-                    items={motions}
-                    emptyMessage="No motions in this session"
-                    renderItem={(statement) => (
-                        <QuestionCard key={statement.id} question={statement} showDate={false} />
-                    )}
-                />
+                <section className="mb-8">
+                    <h2 className="mb-4 text-xl font-semibold text-zinc-900">
+                        Motions ({motions.length})
+                    </h2>
+                    <PaginatedList
+                        items={motions}
+                        itemsPerPage={10}
+                        emptyMessage="No motions in this session"
+                        renderItem={(statement) => (
+                            <QuestionCard key={statement.id} question={statement} showDate={false} />
+                        )}
+                    />
+                </section>
             )}
 
             {/* Bills */}
             {filteredBills.length > 0 && (
-                <ExpandableSection
-                    title="Bills"
-                    items={filteredBills}
-                    emptyMessage="No bills in this session"
-                    renderItem={(bill) => (
-                        <Link key={bill.billId} href={`/bills/${bill.billId}`}>
-                            <div className="group cursor-pointer rounded-lg border border-zinc-200 bg-white p-4 transition-all hover:border-purple-300 hover:shadow-md">
-                                <div className="mb-2 flex flex-wrap items-center gap-2">
-                                    {bill.readingTypes?.includes('BI') && (
-                                        <span className="rounded bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700">
-                                            1st Reading
-                                        </span>
-                                    )}
-                                    {bill.readingTypes?.includes('BP') && (
-                                        <span className="rounded bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700">
-                                            2nd Reading
-                                        </span>
-                                    )}
-                                    {bill.ministry && (
-                                        <span className="rounded bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
-                                            {bill.ministry}
-                                        </span>
-                                    )}
+                <section className="mb-8">
+                    <h2 className="mb-4 text-xl font-semibold text-zinc-900">
+                        Bills ({filteredBills.length})
+                    </h2>
+                    <PaginatedList
+                        items={filteredBills}
+                        itemsPerPage={10}
+                        emptyMessage="No bills in this session"
+                        renderItem={(bill) => (
+                            <Link key={bill.billId} href={`/bills/${bill.billId}`}>
+                                <div className="group h-full cursor-pointer rounded-lg border border-zinc-200 bg-white p-4 transition-all hover:border-purple-300 hover:shadow-md">
+                                    <div className="mb-2 flex flex-wrap items-center gap-2">
+                                        {bill.readingTypes?.includes('BI') && (
+                                            <span className="rounded bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700">
+                                                1st Reading
+                                            </span>
+                                        )}
+                                        {bill.readingTypes?.includes('BP') && (
+                                            <span className="rounded bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700">
+                                                2nd Reading
+                                            </span>
+                                        )}
+                                        {bill.ministry && (
+                                            <span className="rounded bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
+                                                {bill.ministry}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <h3 className="line-clamp-2 font-semibold text-zinc-900 group-hover:text-purple-600">
+                                        {bill.sectionTitle}
+                                    </h3>
                                 </div>
-                                <h3 className="line-clamp-2 font-semibold text-zinc-900 group-hover:text-purple-600">
-                                    {bill.sectionTitle}
-                                </h3>
-                            </div>
-                        </Link>
-                    )}
-                />
+                            </Link>
+                        )}
+                    />
+                </section>
             )}
 
             {/* Oral Answers */}
-            <ExpandableSection
-                title="Oral Answers"
-                items={oralAnswers}
-                emptyMessage={searchQuery ? 'No results found matching your search' : 'No oral answers in this session'}
-                renderItem={(question) => (
-                    <QuestionCard key={question.id} question={question} showDate={false} />
-                )}
-            />
+            <section className="mb-8">
+                <h2 className="mb-4 text-xl font-semibold text-zinc-900">
+                    Oral Answers ({oralAnswers.length})
+                </h2>
+                <PaginatedList
+                    items={oralAnswers}
+                    itemsPerPage={10}
+                    emptyMessage={searchQuery ? 'No results found matching your search' : 'No oral answers in this session'}
+                    renderItem={(question) => (
+                        <QuestionCard key={question.id} question={question} showDate={false} />
+                    )}
+                />
+            </section>
 
             {/* Written Answers */}
-            <ExpandableSection
-                title="Written Answers"
-                items={writtenAnswers}
-                emptyMessage={searchQuery ? 'No results found matching your search' : 'No written answers in this session'}
-                renderItem={(question) => (
-                    <QuestionCard key={question.id} question={question} showDate={false} />
-                )}
-            />
+            <section className="mb-8">
+                <h2 className="mb-4 text-xl font-semibold text-zinc-900">
+                    Written Answers ({writtenAnswers.length})
+                </h2>
+                <PaginatedList
+                    items={writtenAnswers}
+                    itemsPerPage={10}
+                    emptyMessage={searchQuery ? 'No results found matching your search' : 'No written answers in this session'}
+                    renderItem={(question) => (
+                        <QuestionCard key={question.id} question={question} showDate={false} />
+                    )}
+                />
+            </section>
 
             {/* Clarifications */}
             {clarifications.length > 0 && (
-                <ExpandableSection
-                    title="Clarifications"
-                    items={clarifications}
-                    emptyMessage="No clarifications in this session"
-                    renderItem={(statement) => (
-                        <QuestionCard key={statement.id} question={statement} showDate={false} />
-                    )}
-                />
+                <section className="mb-8">
+                    <h2 className="mb-4 text-xl font-semibold text-zinc-900">
+                        Clarifications ({clarifications.length})
+                    </h2>
+                    <PaginatedList
+                        items={clarifications}
+                        itemsPerPage={10}
+                        emptyMessage="No clarifications in this session"
+                        renderItem={(statement) => (
+                            <QuestionCard key={statement.id} question={statement} showDate={false} />
+                        )}
+                    />
+                </section>
             )}
         </main>
     )

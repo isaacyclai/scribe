@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import BillFilters from '@/components/BillFilters'
+import ServerPagination from '@/components/ServerPagination'
 import { query } from '@/lib/db'
 
 interface Bill {
@@ -82,12 +83,32 @@ export default async function BillsPage({
         paramCount++
     }
 
+    // Get total count for pagination
+    const countSql = `SELECT COUNT(*) as total FROM bills b LEFT JOIN ministries m ON b.ministry_id = m.id WHERE 1=1 ${search ? `AND (
+            b.title ILIKE $1 OR
+            EXISTS (
+                SELECT 1 FROM sections s_search 
+                WHERE s_search.bill_id = b.id 
+                AND to_tsvector('english', s_search.content_plain) @@ plainto_tsquery('english', $1)
+            )
+        )` : ''}`
+
+    // We need separate params for count query since it doesn't use the full set
+    const countParams = search ? [`%${search}%`] : []
+    const countResult = await query(countSql, countParams)
+    const totalCount = parseInt(countResult.rows[0].total)
+    const totalPages = Math.ceil(totalCount / limit)
+
+    // Calculate offset
+    const pageNum = typeof params.page === 'string' ? parseInt(params.page) : 1
+    const offset = (pageNum - 1) * limit
+
     sql += ` ORDER BY ${rankOrderBy} COALESCE(b.first_reading_date, 
                  (SELECT MIN(sess.date) FROM sections s 
                   JOIN sessions sess ON s.session_id = sess.id 
                   WHERE s.bill_id = b.id)) DESC NULLS LAST
-                 LIMIT $${paramCount}`
-    sqlParams.push(limit)
+                 LIMIT $${paramCount} OFFSET $${paramCount + 1}`
+    sqlParams.push(limit, offset)
 
     const result = await query(sql, sqlParams)
     const bills: Bill[] = result.rows
@@ -169,6 +190,12 @@ export default async function BillsPage({
                     </div>
                 )}
             </section>
+
+            <ServerPagination
+                currentPage={pageNum}
+                totalPages={totalPages}
+                baseUrl="/bills"
+            />
         </div>
     )
 }

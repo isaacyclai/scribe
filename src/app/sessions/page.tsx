@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { query } from '@/lib/db'
 import SessionFilters from '@/components/SessionFilters'
+import ServerPagination from '@/components/ServerPagination'
 
 interface Session {
     id: string
@@ -125,35 +126,11 @@ export default async function SessionsPage({
                         ))}
 
                         {/* Pagination Controls */}
-                        {totalPages > 1 && (
-                            <div className="mt-8 flex justify-center gap-2">
-                                {pageNum > 1 && (
-                                    <Link
-                                        href={{
-                                            pathname: '/sessions',
-                                            query: { ...params, page: pageNum - 1 },
-                                        }}
-                                        className="rounded border border-zinc-300 px-3 py-1 text-sm text-zinc-600 hover:bg-zinc-50"
-                                    >
-                                        Previous
-                                    </Link>
-                                )}
-                                <span className="flex items-center text-sm text-zinc-600">
-                                    Page {pageNum} of {totalPages}
-                                </span>
-                                {pageNum < totalPages && (
-                                    <Link
-                                        href={{
-                                            pathname: '/sessions',
-                                            query: { ...params, page: pageNum + 1 },
-                                        }}
-                                        className="rounded border border-zinc-300 px-3 py-1 text-sm text-zinc-600 hover:bg-zinc-50"
-                                    >
-                                        Next
-                                    </Link>
-                                )}
-                            </div>
-                        )}
+                        <ServerPagination
+                            currentPage={pageNum}
+                            totalPages={totalPages}
+                            baseUrl="/sessions"
+                        />
                     </>
                 )}
             </div>

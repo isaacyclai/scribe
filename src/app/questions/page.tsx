@@ -1,5 +1,6 @@
 import QuestionCard from '@/components/QuestionCard'
 import QuestionFilters from '@/components/QuestionFilters'
+import ServerPagination from '@/components/ServerPagination'
 import { query } from '@/lib/db'
 import type { Section, Speaker } from '@/types'
 
@@ -74,12 +75,35 @@ export default async function QuestionsPage({
         orderBy = 'rank DESC, sess.date DESC, s.section_order ASC'
     }
 
+    // Calculate offset
+    const pageNum = typeof params.page === 'string' ? parseInt(params.page) : 1
+    const offset = (pageNum - 1) * limit
+
+    // Count Query
+    let countSql = `
+        SELECT COUNT(*) as total
+        FROM sections s
+        JOIN sessions sess ON s.session_id = sess.id
+        WHERE (s.category = 'question' OR s.category IS NULL)
+            AND s.section_type NOT IN ('BI', 'BP')
+    `
+    if (search) {
+        countSql += ` AND (
+            to_tsvector('english', s.content_plain) @@ plainto_tsquery('english', $1) OR 
+            s.section_title ILIKE $${search ? '1' : ''} -- Reuse param 1 if search exists
+        )`
+    }
+    const countResult = await query(countSql, search ? [`%${search}%`] : [])
+    const totalCount = parseInt(countResult.rows[0]?.total || '0')
+    const totalPages = Math.ceil(totalCount / limit)
+
+    // Data Query
     sql += ` GROUP BY s.id, s.session_id, s.section_type, s.section_title, 
              s.category, s.section_order, m.acronym, m.id, sess.date, sess.sitting_no
              ${search ? ', rank' : ''}
              ORDER BY ${orderBy} 
-             LIMIT $${paramCount}`
-    sqlParams.push(limit)
+             LIMIT $${paramCount} OFFSET $${paramCount + 1}`
+    sqlParams.push(limit, offset)
 
     const result = await query(sql, sqlParams)
     const questions: Section[] = result.rows.map(row => ({
@@ -117,6 +141,12 @@ export default async function QuestionsPage({
                     </div>
                 )}
             </section>
+
+            <ServerPagination
+                currentPage={pageNum}
+                totalPages={totalPages}
+                baseUrl="/questions"
+            />
         </div>
     )
 }

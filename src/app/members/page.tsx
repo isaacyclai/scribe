@@ -2,6 +2,7 @@ import Link from 'next/link'
 import MemberCard from '@/components/MemberCard'
 import MemberFilters from '@/components/MemberFilters'
 import { query } from '@/lib/db'
+import ServerPagination from '@/components/ServerPagination'
 import type { Member } from '@/types'
 
 export default async function MembersPage({
@@ -97,35 +98,11 @@ export default async function MembersPage({
                     </div>
 
                     {/* Pagination Controls */}
-                    {totalPages > 1 && (
-                        <div className="mt-8 flex justify-center gap-2">
-                            {pageNum > 1 && (
-                                <Link
-                                    href={{
-                                        pathname: '/members',
-                                        query: { ...params, page: pageNum - 1 },
-                                    }}
-                                    className="rounded border border-zinc-300 px-3 py-1 text-sm text-zinc-600 hover:bg-zinc-50"
-                                >
-                                    Previous
-                                </Link>
-                            )}
-                            <span className="flex items-center text-sm text-zinc-600">
-                                Page {pageNum} of {totalPages}
-                            </span>
-                            {pageNum < totalPages && (
-                                <Link
-                                    href={{
-                                        pathname: '/members',
-                                        query: { ...params, page: pageNum + 1 },
-                                    }}
-                                    className="rounded border border-zinc-300 px-3 py-1 text-sm text-zinc-600 hover:bg-zinc-50"
-                                >
-                                    Next
-                                </Link>
-                            )}
-                        </div>
-                    )}
+                    <ServerPagination
+                        currentPage={pageNum}
+                        totalPages={totalPages}
+                        baseUrl="/members"
+                    />
                 </>
             )}
         </div>
