@@ -19,13 +19,13 @@ export default function Navbar() {
     const [isMenuOpen, setIsMenuOpen] = useState(false)
 
     const navLinks = [
-        { href: '/', label: 'Home' },
         { href: '/sessions', label: 'Sittings' },
         { href: '/motions', label: 'Motions' },
         { href: '/bills', label: 'Bills' },
         { href: '/questions', label: 'Questions' },
         { href: '/members', label: 'MPs' },
         { href: '/ministries', label: 'Ministries' },
+        { href: '/about', label: 'About' },
     ]
 
     // Prefetch API data on hover to warm the cache

@@ -132,7 +132,7 @@ export default async function Home() {
       {/* About / Info */}
       <section className="bg-zinc-900 py-12 text-white">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="mb-4 text-2xl font-semibold">About Scribe</h2>
+          <Link href="/about" className="mb-4 text-2xl font-semibold hover:text-zinc-400 transition-colors">About Scribe</Link>
           <p className="mx-auto max-w-2xl text-zinc-400">
             Data is sourced from the official <a href="https://sprs.parl.gov.sg/search/#/home" className="underline hover:text-white" target="_blank" rel="noreferrer">Hansard</a>.
             Scribe is an independent project and is not affiliated with the Singapore Government in any way.
