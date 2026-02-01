@@ -90,8 +90,11 @@ export default async function MembersPage({
                     Members of Parliament
                 </h1>
                 <div className="mb-8 space-y-8 text-zinc-600">
+                    <p className="mb-3 leading-relaxed">
+                        Here, you can find the individual profiles of Members of Parliament (MPs) along with their records of their involvements in Parliament. The
+                        individual pages of each MP also have AI-generated summaries of their 20 latest contributions in Parliament.
+                    </p>
                     <p className="leading-relaxed">
-                        Here, you can find the individual profiles of Members of Parliament (MPs) along with their records of their involvements in Parliament.
                         In Singapore, there are three types of MPs: elected, non-constituency, and nominated.
                     </p>
 

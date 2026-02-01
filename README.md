@@ -62,16 +62,20 @@ If you wish to replicate Scribe independently, you can follow the steps below.
 
 1. **Setup database**
 
-    Dates should be in `DD-MM-YYYY` format.
+    Create an `.env` file with your database URL:
+    ```bash
+    DATABASE_URL=your_database_url
+    ```
+
+    Then, run the following script. Dates should be in `DD-MM-YYYY` format.
     ```bash
     uv run batch_process.py <start_date> <end_date>
     ```
 
 1. **(Optional) Generate summaries**
     
-    Create an `.env` file with your database URL and Groq API key:
+    Add your Groq API key in the `.env` file:
     ```bash
-    DATABASE_URL=your_database_url
     GROQ_API_KEY=your_groq_api_key
     ```
     To generate summaries for sessions and members, run the following.
