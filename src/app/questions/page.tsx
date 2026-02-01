@@ -117,8 +117,20 @@ export default async function QuestionsPage({
                 <h1 className="mb-2 text-3xl font-bold text-zinc-900">
                     Questions
                 </h1>
-                <p className="text-zinc-600">
-                    Browse and search parliamentary questions.
+                <p className="mb-4 text-zinc-600">
+                    Here, you can find all parliamentary questions (PQs) that have been asked. PQs are formal inquiries made by MPs to ministers for information,
+                    clarification, or updates on specific issues. There are two types of PQs that can be asked: oral and written. Each MP can file up to 5 PQs per
+                    sitting (three oral and two written). After the initial answer from the Minister, supplementary questions may be asked by any MP.
+                </p>
+                <h3 className="mb-3 text-2xl font-bold text-zinc-900">Oral Questions</h3>
+                <p className="mb-4 text-zinc-600">
+                    Oral questions are answered and can be debated during question time, the first 90 minutes of each sitting. The order of questions to be answered
+                    is decided by the Leader of the House, and is published in the Order Paper prior to the sitting. After 90 minutes, the remaining questions which
+                    have not been answered will be provided with written answers.
+                </p>
+                <h3 className="mb-3 text-2xl font-bold text-zinc-900">Written Questions</h3>
+                <p className="mb-4 text-zinc-600">
+                    Written questions are not answered during question time and are instead provided with written answers. They are also included in the Order Paper.
                 </p>
             </header>
 

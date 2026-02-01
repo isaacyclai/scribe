@@ -43,7 +43,7 @@ export default function QuestionFilters({
                 <select
                     value={sort}
                     onChange={handleSortChange}
-                    className="w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-purple-300 focus:ring-1 focus:ring-purple-300"
+                    className="w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-300 focus:ring-1 focus:ring-purple-300"
                 >
                     <option value="relevance">Relevance</option>
                     <option value="newest">Newest First</option>

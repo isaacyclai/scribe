@@ -92,12 +92,12 @@ export default async function MembersPage({
                 <div className="mb-8 space-y-8 text-zinc-600">
                     <p className="leading-relaxed">
                         Here, you can find the individual profiles of Members of Parliament (MPs) along with their records of their involvements in Parliament.
-                        In Singapore, there are three types of MPs.
+                        In Singapore, there are three types of MPs: elected, non-constituency, and nominated.
                     </p>
 
                     <section>
                         <h3 className="mb-3 text-2xl font-bold text-zinc-900">Elected Members</h3>
-                        <p className="mb-4 leading-relaxed">
+                        <p className="leading-relaxed">
                             Singapore is divided into different geographical areas known as constituencies. During elections, the residents of these
                             each constituency vote for one or more MPs who will represent them in Parliament. Some of these MPs will be appointed to positions
                             in the Government and become office holders. The rest of the elected MPs are known as backbenchers. Office holders include Ministers,
