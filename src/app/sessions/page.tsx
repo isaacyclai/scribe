@@ -85,7 +85,8 @@ export default async function SessionsPage({
                 Parliament Sittings
             </h1>
             <p className="mb-6 text-zinc-600">
-                Browse parliamentary sittings and their readings.
+                Here, you can find the proceedings of each Parliament sitting. A typical sitting consists of 90 minutes of <Link href="/questions" className="text-blue-600 hover:underline">question time</Link>,
+                followed by readings and debates of various <Link href="/bills" className="text-blue-600 hover:underline">bills</Link> and <Link href="/motions" className="text-blue-600 hover:underline">motions</Link>.
             </p>
 
             <SessionFilters
