@@ -118,8 +118,12 @@ export default async function MotionsPage({
                 <h1 className="mb-2 text-3xl font-bold text-zinc-900">
                     Motions
                 </h1>
+                <p className="mb-4 text-zinc-600">
+                    Here, you can find motions that have been debated in Parliament, such as adjournment motions and ministerial statements.
+                    Note that some very short motions (such as ones to ask for extension of time) may not be included in this list.
+                </p>
                 <p className="text-zinc-600">
-                    Browse and search parliamentary motions, including adjournment motions and ministerial statements.
+                    There is typically one adjournment motion at the end of each sitting which can be moved by any MP.
                 </p>
             </header>
 
