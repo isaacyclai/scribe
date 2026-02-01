@@ -119,8 +119,17 @@ export default async function BillsPage({
                 <h1 className="mb-2 text-3xl font-bold text-zinc-900">
                     Bills
                 </h1>
+                <p className="mb-4 text-zinc-600">
+                    Here, you can find bills that have been introduced, debated, and passed in Parliament. Bills are the first step
+                    in the process of making laws, and are first introduced by a Minister on behalf of the Government. MPs can also
+                    introduce Private Member's Bills.
+                </p>
                 <p className="text-zinc-600">
-                    Browse parliamentary bills and their readings.
+                    In the second reading, the principles and merits of the bill are debated, after
+                    which members vote on the bill. If the bill seeks to amend the Consitution, then a supermajority (two-thirds) is
+                    required for the bill to move on to the next stage. Otherwise, a simple majority (half) is sufficient. If a majority
+                    cannot be reached, the bill will go through a third reading after being amended. For a more detailed description
+                    of the full process, please refer to the official <a href="https://www.parliament.gov.sg/about-us/parliament-information/functions" className="text-blue-600 hover:underline">Parliament website</a>.
                 </p>
             </header>
 

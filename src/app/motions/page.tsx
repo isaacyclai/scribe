@@ -123,7 +123,7 @@ export default async function MotionsPage({
                     Note that some very short motions (such as ones to ask for extension of time) may not be included in this list.
                 </p>
                 <p className="text-zinc-600">
-                    There is typically one adjournment motion at the end of each sitting which can be moved by any MP.
+                    There is typically one <a href="https://www.parliament.gov.sg/parliamentary-business/glossary/Details/right-to-raise-a-matter-on-a-motion-for-adjournment/Right%20to%20Raise%20a%20Matter%20on%20a%20Motion%20for%20Adjournment" className="text-blue-600 hover:underline">adjournment motion</a> at the end of each sitting which can be moved by any MP.
                 </p>
             </header>
 
