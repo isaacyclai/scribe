@@ -66,7 +66,7 @@ const sessionInfo = section.sessionDate
 
 <Layout title={section.sectionTitle} description={`${typeLabel}: ${section.sectionTitle}`}>
   <!-- Breadcrumb -->
-  <nav class="font-sans text-xs text-ink-muted mb-6 animate-fade-in">
+  <nav class="font-sans text-xs text-ink-muted mb-6">
     <a href={backLink} class="hover:text-accent no-underline">{backLabel}</a>
     <span class="mx-2">→</span>
     <span>{typeLabel}</span>
@@ -80,7 +80,7 @@ const sessionInfo = section.sessionDate
 
   <article class="max-w-prose">
     <!-- Header -->
-    <header class="mb-8 animate-fade-up">
+    <header class="mb-8">
       <div class="flex flex-wrap items-center gap-2 mb-3">
         {section.category && categoryLabels[section.category] ? (
           <Tag color="indigo">{categoryLabels[section.category]}</Tag>
