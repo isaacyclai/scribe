@@ -1,8 +1,10 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import SectionLabel from '../../components/SectionLabel.astro';
 import QuestionCard from '../../components/QuestionCard.astro';
 import BillCard from '../../components/BillCard.astro';
 import Pagination from '../../components/Pagination.astro';
+import Tag from '../../components/Tag.astro';
 import { getMinistries, getMinistry, getMinistrySections, getMinistryBills } from '../../lib/db';
 
 export async function getStaticPaths() {
@@ -29,31 +31,29 @@ const statements = sections.filter(s => s.sectionType === 'OS' || s.sectionType 
 ---
 
 <Layout title={ministry.name} description={`Parliamentary activities for ${ministry.name}`}>
-  <a href="/ministries" class="mb-6 inline-flex items-center text-sm text-blue-600 hover:underline">
-    &larr; Back to Ministries
+  <a href="/ministries" class="inline-flex items-center font-sans text-sm text-accent hover:text-accent-light no-underline mb-8">
+    ← Back to Ministries
   </a>
 
-  <header class="mb-8">
-    <div class="mb-2 flex items-center gap-3">
-      <span class="rounded bg-green-100 px-3 py-1 text-lg font-bold text-green-700">
-        {ministry.acronym}
-      </span>
+  <header class="mb-10">
+    <div class="flex items-center gap-3 mb-3">
+      <Tag color="green" class="text-sm px-3 py-1">{ministry.acronym}</Tag>
     </div>
-    <h1 class="text-3xl font-bold text-zinc-900">
+    <h1 class="font-display text-display-md text-ink mb-2 animate-fade-up">
       {ministry.name}
     </h1>
-    <p class="mt-2 text-zinc-500">
+    <p class="font-sans text-sm text-ink-muted">
       {ministry.sectionCount} total sections
     </p>
   </header>
 
   <!-- Bills -->
   {bills.length > 0 && (
-    <section class="mb-8">
-      <h2 class="mb-4 text-xl font-semibold text-zinc-900">
-        Bills ({bills.length})
+    <section class="mb-10">
+      <h2 class="font-display text-xl text-ink mb-4">
+        Bills <span class="font-sans text-sm text-ink-muted font-normal">({bills.length})</span>
       </h2>
-      <div id="bills-list" class="grid gap-4 sm:grid-cols-2">
+      <div id="bills-list" class="flex flex-col border-t border-border">
         {bills.map((bill) => (
           <div class="bill-item">
             <BillCard bill={bill} />
@@ -66,11 +66,11 @@ const statements = sections.filter(s => s.sectionType === 'OS' || s.sectionType 
 
   <!-- Motions -->
   {motions.length > 0 && (
-    <section class="mb-8">
-      <h2 class="mb-4 text-xl font-semibold text-zinc-900">
-        Motions ({motions.length})
+    <section class="mb-10">
+      <h2 class="font-display text-xl text-ink mb-4">
+        Motions <span class="font-sans text-sm text-ink-muted font-normal">({motions.length})</span>
       </h2>
-      <div id="motions-list" class="grid gap-4 sm:grid-cols-2">
+      <div id="motions-list" class="flex flex-col border-t border-border">
         {motions.map((section) => (
           <div class="motion-item">
             <QuestionCard section={section} />
@@ -83,11 +83,11 @@ const statements = sections.filter(s => s.sectionType === 'OS' || s.sectionType 
 
   <!-- Questions -->
   {questions.length > 0 && (
-    <section class="mb-8">
-      <h2 class="mb-4 text-xl font-semibold text-zinc-900">
-        Questions ({questions.length})
+    <section class="mb-10">
+      <h2 class="font-display text-xl text-ink mb-4">
+        Questions <span class="font-sans text-sm text-ink-muted font-normal">({questions.length})</span>
       </h2>
-      <div id="questions-list" class="grid gap-4 sm:grid-cols-2">
+      <div id="questions-list" class="flex flex-col border-t border-border">
         {questions.map((section) => (
           <div class="question-item">
             <QuestionCard section={section} />
@@ -100,11 +100,11 @@ const statements = sections.filter(s => s.sectionType === 'OS' || s.sectionType 
 
   <!-- Statements -->
   {statements.length > 0 && (
-    <section class="mb-8">
-      <h2 class="mb-4 text-xl font-semibold text-zinc-900">
-        Statements ({statements.length})
+    <section class="mb-10">
+      <h2 class="font-display text-xl text-ink mb-4">
+        Statements <span class="font-sans text-sm text-ink-muted font-normal">({statements.length})</span>
       </h2>
-      <div id="statements-list" class="grid gap-4 sm:grid-cols-2">
+      <div id="statements-list" class="flex flex-col border-t border-border">
         {statements.map((section) => (
           <div class="statement-item">
             <QuestionCard section={section} />
@@ -116,7 +116,7 @@ const statements = sections.filter(s => s.sectionType === 'OS' || s.sectionType 
   )}
 
   {sections.length === 0 && bills.length === 0 && (
-    <p class="py-8 text-center text-zinc-500">
+    <p class="py-12 text-center font-body text-ink-muted">
       No parliamentary activities found for this ministry.
     </p>
   )}

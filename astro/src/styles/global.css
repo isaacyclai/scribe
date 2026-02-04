@@ -1,32 +1,165 @@
+@import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,400&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ─── CSS Custom Properties ─── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --page-bg: #f5f1eb;
+  --surface: #fdfcf9;
+  --warm: #faf7f3;
+  --ink: #1a1612;
+  --ink-soft: #5a5248;
+  --ink-muted: #8a8078;
+  --accent: #8b2500;
+  --accent-light: #a63a14;
+  --border: #e8e0d4;
+  --border-light: #f0ece5;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+/* ─── Base Styles ─── */
+@layer base {
+  body {
+    @apply bg-page-bg text-ink antialiased;
+    font-family: 'DM Sans', system-ui, sans-serif;
+  }
+
+  /* Default prose typography */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Newsreader', Georgia, serif;
+    @apply text-ink;
+  }
+
+  /* Links */
+  a {
+    @apply text-accent transition-colors;
+  }
+
+  a:hover {
+    @apply text-accent-light;
+  }
 }
 
-/* Transcript paragraph spacing */
+/* ─── Component Layer ─── */
+@layer components {
+  /* Section Label - small caps accent label */
+  .section-label {
+    @apply font-sans text-label uppercase text-accent tracking-widest;
+  }
+
+  /* Page Title - large serif heading */
+  .page-title {
+    @apply font-display text-display-lg text-ink mb-4;
+  }
+
+  /* Page Title XL - for hero sections */
+  .page-title-xl {
+    @apply font-display text-display-xl text-ink;
+  }
+
+  /* Body prose - for long-form reading */
+  .body-prose {
+    font-family: 'Source Serif 4', Georgia, serif;
+    @apply text-ink-soft leading-relaxed;
+  }
+
+  /* Card base style */
+  .card {
+    @apply bg-surface border border-border rounded-md transition-all duration-200;
+  }
+
+  .card:hover {
+    @apply bg-warm shadow-sm;
+  }
+
+  /* Tag base style */
+  .tag {
+    @apply font-sans text-label-sm uppercase tracking-wider px-2 py-0.5 rounded;
+  }
+
+  /* Ruled lines background (for hero sections) */
+  .ruled-lines {
+    background-image: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 39px,
+      var(--border) 39px,
+      var(--border) 40px
+    );
+  }
+
+  /* Editorial link style */
+  .editorial-link {
+    @apply text-accent no-underline hover:text-accent-light transition-colors;
+  }
+
+  /* Nav link style */
+  .nav-link {
+    @apply font-sans text-xs uppercase tracking-wide text-ink-muted hover:text-accent transition-colors;
+  }
+
+  .nav-link-active {
+    @apply text-accent font-semibold border-b-2 border-accent pb-0.5;
+  }
+}
+
+/* ─── Transcript Styles ─── */
+.transcript-content {
+  font-family: 'Source Serif 4', Georgia, serif;
+  @apply text-base leading-relaxed;
+  color: #3a342c;
+}
+
 .transcript-content p {
-  margin-bottom: 1rem;
+  @apply mb-4;
 }
 
-.transcript-content p+p {
-  margin-top: 1rem;
+.transcript-content p + p {
+  @apply mt-4;
+}
+
+/* Speaker name in transcript */
+.transcript-content strong {
+  @apply font-semibold;
 }
 
 /* Procedural text from Hansard (e.g., "[Members stood]" or "[Sitting suspended]") */
 .transcript-content .proc {
-  display: block;
-  font-size: 0.875rem;
-  font-style: italic;
-  color: #6b7280;
-  margin: 0.5rem 0;
+  @apply block text-sm italic text-ink-muted my-2;
+}
+
+/* ─── Prose Overrides for Editorial Style ─── */
+.prose {
+  --tw-prose-body: var(--ink-soft);
+  --tw-prose-headings: var(--ink);
+  --tw-prose-links: var(--accent);
+  --tw-prose-bold: var(--ink);
+}
+
+.prose h1, .prose h2, .prose h3, .prose h4 {
+  font-family: 'Newsreader', Georgia, serif;
+}
+
+.prose p, .prose li {
+  font-family: 'Source Serif 4', Georgia, serif;
+}
+
+/* ─── Animation Delays ─── */
+.animate-delay-100 { animation-delay: 0.1s; }
+.animate-delay-200 { animation-delay: 0.2s; }
+.animate-delay-300 { animation-delay: 0.3s; }
+.animate-delay-400 { animation-delay: 0.4s; }
+
+/* ─── Utility Classes ─── */
+@layer utilities {
+  /* Warm hover background */
+  .hover-warm:hover {
+    @apply bg-warm;
+  }
+
+  /* Text balanced for headings */
+  .text-balance {
+    text-wrap: balance;
+  }
 }

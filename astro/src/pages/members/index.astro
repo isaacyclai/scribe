@@ -1,5 +1,6 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import SectionLabel from '../../components/SectionLabel.astro';
 import MemberCard from '../../components/MemberCard.astro';
 import Pagination from '../../components/Pagination.astro';
 import { getMembersWithInfo, getMemberCount } from '../../lib/db';
@@ -9,26 +10,28 @@ const totalCount = getMemberCount();
 ---
 
 <Layout title="Members of Parliament" description="Browse Singapore Members of Parliament">
-  <h1 class="mb-2 text-3xl font-bold text-zinc-900">
-    Members of Parliament
+  <SectionLabel>Members of Parliament</SectionLabel>
+  
+  <h1 class="font-display text-display-lg text-ink mb-4 animate-fade-up">
+    Your Representatives
   </h1>
-  <p class="mb-6 text-zinc-600">
-    Browse current and former Members of Parliament. Click on a member to see their
-    parliamentary activities, questions asked, and attendance history.
+  
+  <p class="font-body text-base text-ink-soft leading-relaxed max-w-[58ch] mb-8 animate-fade-up animate-delay-100">
+    Browse Members of Parliament, see their activity in the House, and explore the questions, motions, and bills they've been involved in.
   </p>
 
-  <p class="mb-4 text-sm text-zinc-500">
+  <p class="font-sans text-sm text-ink-muted mb-6">
     Showing {members.length} of {totalCount} members
   </p>
 
-  <div id="members-list" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+  <div id="members-list" class="grid gap-4 sm:grid-cols-2">
     {members.length === 0 ? (
-      <p class="col-span-full py-8 text-center text-zinc-500">
+      <p class="col-span-full py-12 text-center font-body text-ink-muted">
         No members found
       </p>
     ) : (
-      members.map((member) => (
-        <div class="member-item">
+      members.map((member, i) => (
+        <div class="member-item animate-fade-up" style={`animation-delay: ${0.1 + i * 0.03}s`}>
           <MemberCard member={member} />
         </div>
       ))

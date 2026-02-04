@@ -1,5 +1,7 @@
 ---
 import type { Section } from '../lib/db';
+import TypeBadge from './TypeBadge.astro';
+import Tag from './Tag.astro';
 
 interface Props {
   section: Section;
@@ -8,46 +10,21 @@ interface Props {
 
 const { section, showDate = false } = Astro.props;
 
-// Map section types to display labels
-const typeLabels: Record<string, string> = {
-  'OA': 'Oral Answer',
-  'WA': 'Written Answer',
-  'WANA': 'Written Answer (No Answer)',
-  'BI': '1st Reading',
-  'BP': '2nd Reading',
-  'OS': 'Oral Statement',
-  'WS': 'Written Statement',
-};
-
-const typeColors: Record<string, string> = {
-  'OA': 'bg-blue-100 text-blue-700',
-  'WA': 'bg-purple-100 text-purple-700',
-  'WANA': 'bg-zinc-100 text-zinc-700',
-  'BI': 'bg-green-100 text-green-700',
-  'BP': 'bg-green-100 text-green-700',
-  'OS': 'bg-amber-100 text-amber-700',
-  'WS': 'bg-amber-100 text-amber-700',
-};
-
-const typeLabel = typeLabels[section.sectionType] || section.sectionType;
-const typeColor = typeColors[section.sectionType] || 'bg-zinc-100 text-zinc-700';
-
 // Truncate content for snippet
 const snippet = section.contentPlain?.substring(0, 200) + (section.contentPlain && section.contentPlain.length > 200 ? '...' : '');
 ---
 
-<a href={`/questions/${section.id}`} class="block rounded-lg border border-zinc-200 bg-white p-4 transition-all hover:border-blue-300 hover:shadow-md">
-  <div class="mb-2 flex flex-wrap items-center gap-2">
-    <span class={`rounded px-2 py-0.5 text-xs font-medium ${typeColor}`}>
-      {typeLabel}
-    </span>
+<a
+  href={`/questions/${section.id}`}
+  class="group block p-5 border-b border-border transition-colors hover:bg-warm cursor-pointer"
+>
+  <div class="flex flex-wrap items-center gap-2 mb-2">
+    <TypeBadge type={section.sectionType} />
     {section.ministry && (
-      <span class="rounded bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
-        {section.ministry}
-      </span>
+      <Tag color="green">{section.ministry}</Tag>
     )}
     {showDate && section.sessionDate && (
-      <span class="text-xs text-zinc-500">
+      <span class="font-sans text-xs text-ink-muted">
         {new Date(section.sessionDate).toLocaleDateString('en-SG', {
           year: 'numeric',
           month: 'short',
@@ -56,26 +33,26 @@ const snippet = section.contentPlain?.substring(0, 200) + (section.contentPlain 
       </span>
     )}
   </div>
-  <h3 class="mb-2 font-semibold text-zinc-900">
+  
+  <h3 class="font-display text-lg text-ink leading-snug mb-2 group-hover:text-accent transition-colors">
     {section.sectionTitle}
   </h3>
+  
   {section.speakers && section.speakers.length > 0 && (
-    <div class="mb-2 flex flex-wrap gap-1">
+    <div class="flex flex-wrap gap-2 mb-2">
       {section.speakers.slice(0, 3).map((speaker) => (
-        <a
-          href={`/members/${speaker.memberId}`}
-          class="text-xs text-blue-600 hover:underline"
-        >
+        <span class="font-sans text-xs text-accent hover:underline">
           {speaker.name}
-        </a>
+        </span>
       ))}
       {section.speakers.length > 3 && (
-        <span class="text-xs text-zinc-500">+{section.speakers.length - 3} more</span>
+        <span class="font-sans text-xs text-ink-muted">+{section.speakers.length - 3} more</span>
       )}
     </div>
   )}
+  
   {snippet && (
-    <p class="text-sm text-zinc-600 line-clamp-2">
+    <p class="font-body text-sm text-ink-soft leading-relaxed line-clamp-2">
       {snippet}
     </p>
   )}

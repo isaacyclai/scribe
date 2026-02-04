@@ -16,18 +16,18 @@ const remaining = limit && speakers.length > limit ? speakers.length - limit : 0
   {displaySpeakers.map((speaker) => (
     <a
       href={`/members/${speaker.memberId}`}
-      class="rounded-full bg-zinc-100 px-3 py-1 text-sm transition-colors hover:bg-blue-100 hover:text-blue-700"
+      class="rounded-full border border-border bg-surface px-3 py-1 font-ui text-sm text-ink/70 transition-all hover:border-accent/30 hover:bg-accent/5 hover:text-accent"
     >
       {speaker.name}
       {speaker.designation && (
-        <span class="ml-1 text-zinc-500">
+        <span class="ml-1 text-ink/40">
           ({speaker.designation})
         </span>
       )}
     </a>
   ))}
   {remaining > 0 && (
-    <span class="rounded-full bg-zinc-50 px-3 py-1 text-sm text-zinc-500">
+    <span class="rounded-full border border-border/50 bg-page px-3 py-1 font-ui text-sm text-ink/40">
       +{remaining} more
     </span>
   )}

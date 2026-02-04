@@ -1,0 +1,26 @@
+---
+import Tag from './Tag.astro';
+
+interface Props {
+  status: string;
+  class?: string;
+}
+
+const { status, class: className = '' } = Astro.props;
+
+// Map bill statuses to colors
+const statusColors: Record<string, 'green' | 'accent' | 'amber' | 'muted'> = {
+  'Passed': 'green',
+  'Second Reading': 'accent',
+  '2nd Reading': 'accent',
+  'Committee Stage': 'amber',
+  'First Reading': 'muted',
+  '1st Reading': 'muted',
+};
+
+const color = statusColors[status] || 'muted';
+---
+
+<Tag color={color} class={className}>
+  {status}
+</Tag>

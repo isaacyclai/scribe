@@ -1,109 +1,155 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import PageTitle from '../components/PageTitle.astro';
+import SectionLabel from '../components/SectionLabel.astro';
 ---
 
 <Layout title="About" description="About Scribe - Singapore Parliament proceedings made accessible">
-  <h1 class="mb-6 text-3xl font-bold text-zinc-900">
-    About Scribe
-  </h1>
+  <PageTitle 
+    title="About Scribe" 
+    subtitle="Making Singapore Parliament proceedings accessible and searchable"
+  />
 
-  <div class="prose prose-zinc max-w-none">
-    <section class="mb-8">
-      <h2 class="text-xl font-semibold text-zinc-900 mb-4">What is Scribe?</h2>
-      <p class="text-zinc-600 mb-4">
-        Scribe is a project to make Singapore Parliament proceedings more accessible and searchable.
-        It processes the official Hansard records and presents them in a user-friendly format, making
-        it easier to explore parliamentary questions, bills, motions, and member activities.
-      </p>
+  <div class="max-w-3xl">
+    <!-- What is Scribe -->
+    <section class="mb-12">
+      <SectionLabel>What is Scribe?</SectionLabel>
+      <div class="mt-4 space-y-4">
+        <p class="font-body text-ink/80 leading-relaxed">
+          Scribe is a project to make Singapore Parliament proceedings more accessible and searchable.
+          It processes the official Hansard records and presents them in a user-friendly format, making
+          it easier to explore parliamentary questions, bills, motions, and member activities.
+        </p>
+      </div>
     </section>
 
-    <section class="mb-8">
-      <h2 class="text-xl font-semibold text-zinc-900 mb-4">Data Sources</h2>
-      <p class="text-zinc-600 mb-4">
-        All data is sourced from the official Singapore Parliament Hansard, available at
-        <a
-          href="https://www.parliament.gov.sg/parliamentary-business/hansard"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="text-blue-600 hover:underline"
-        >
-          parliament.gov.sg
-        </a>.
-      </p>
-      <p class="text-zinc-600 mb-4">
-        The Hansard is the official record of parliamentary debates and includes:
-      </p>
-      <ul class="list-disc list-inside text-zinc-600 mb-4 space-y-1">
-        <li>Questions and answers (oral and written)</li>
-        <li>Bill readings and debates</li>
-        <li>Motions and ministerial statements</li>
-        <li>Member attendance records</li>
-      </ul>
-    </section>
-
-    <section class="mb-8">
-      <h2 class="text-xl font-semibold text-zinc-900 mb-4">AI Summaries</h2>
-      <p class="text-zinc-600 mb-4">
-        Some content includes AI-generated summaries to help readers quickly understand the key
-        points of parliamentary proceedings. These summaries are provided for convenience and
-        should not be considered official records. Always refer to the original Hansard for
-        authoritative information.
-      </p>
-    </section>
-
-    <section class="mb-8">
-      <h2 class="text-xl font-semibold text-zinc-900 mb-4">Disclaimer</h2>
-      <p class="text-zinc-600 mb-4">
-        This is an unofficial project and is not affiliated with the Singapore Parliament or
-        the Government of Singapore. While we strive for accuracy, the official Hansard
-        should be consulted for authoritative records.
-      </p>
-    </section>
-
-    <section>
-      <h2 class="text-xl font-semibold text-zinc-900 mb-4">Links</h2>
-      <ul class="list-disc list-inside text-zinc-600 space-y-2">
-        <li>
-          <a
-            href="https://www.parliament.gov.sg/"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="text-blue-600 hover:underline"
-          >
-            Singapore Parliament Official Website
-          </a>
-        </li>
-        <li>
+    <!-- Data Sources -->
+    <section class="mb-12">
+      <SectionLabel>Data Sources</SectionLabel>
+      <div class="mt-4 space-y-4">
+        <p class="font-body text-ink/80 leading-relaxed">
+          All data is sourced from the official Singapore Parliament Hansard, available at
           <a
             href="https://www.parliament.gov.sg/parliamentary-business/hansard"
             target="_blank"
             rel="noopener noreferrer"
-            class="text-blue-600 hover:underline"
-          >
-            Official Hansard Records
-          </a>
-        </li>
-        <li>
-          <a
-            href="https://www.parliament.gov.sg/parliamentary-business/order-paper"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="text-blue-600 hover:underline"
-          >
-            Order Paper (Parliament Agenda)
-          </a>
-        </li>
-        <li>
-          <a
-            href="https://www.youtube.com/@SingaporeMDDI/streams"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="text-blue-600 hover:underline"
-          >
-            Parliament Live Streams (MDDI YouTube)
-          </a>
-        </li>
-      </ul>
+            class="text-accent hover:underline"
+          >parliament.gov.sg</a>.
+        </p>
+        <p class="font-body text-ink/80 leading-relaxed">
+          The Hansard is the official record of parliamentary debates and includes:
+        </p>
+        <ul class="list-none space-y-2 pl-4 border-l-2 border-accent/20">
+          <li class="font-body text-ink/80">Questions and answers (oral and written)</li>
+          <li class="font-body text-ink/80">Bill readings and debates</li>
+          <li class="font-body text-ink/80">Motions and ministerial statements</li>
+          <li class="font-body text-ink/80">Member attendance records</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- AI Summaries -->
+    <section class="mb-12">
+      <SectionLabel>AI Summaries</SectionLabel>
+      <div class="mt-4 space-y-4">
+        <p class="font-body text-ink/80 leading-relaxed">
+          Some content includes AI-generated summaries to help readers quickly understand the key
+          points of parliamentary proceedings. These summaries are provided for convenience and
+          should not be considered official records. Always refer to the original Hansard for
+          authoritative information.
+        </p>
+        <div class="rounded-lg border border-amber-200 bg-amber-50/50 p-4">
+          <p class="font-ui text-sm text-amber-800">
+            <strong>Note:</strong> AI-generated content is marked with a distinctive indicator and should be verified against official records.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Disclaimer -->
+    <section class="mb-12">
+      <SectionLabel>Disclaimer</SectionLabel>
+      <div class="mt-4 space-y-4">
+        <p class="font-body text-ink/80 leading-relaxed">
+          This is an unofficial project and is not affiliated with the Singapore Parliament or
+          the Government of Singapore. While we strive for accuracy, the official Hansard
+          should be consulted for authoritative records.
+        </p>
+      </div>
+    </section>
+
+    <!-- Links -->
+    <section class="mb-12">
+      <SectionLabel>Official Resources</SectionLabel>
+      <div class="mt-4 grid gap-3 sm:grid-cols-2">
+        <a
+          href="https://www.parliament.gov.sg/"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="group flex items-center gap-3 rounded-lg border border-border bg-surface p-4 transition-all hover:border-accent/30 hover:shadow-sm"
+        >
+          <div class="flex h-10 w-10 items-center justify-center rounded-full bg-accent/10 text-accent">
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+            </svg>
+          </div>
+          <div>
+            <span class="font-display text-sm font-medium text-ink group-hover:text-accent">Parliament Website</span>
+            <span class="block font-ui text-xs text-ink/50">Official Singapore Parliament</span>
+          </div>
+        </a>
+        
+        <a
+          href="https://www.parliament.gov.sg/parliamentary-business/hansard"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="group flex items-center gap-3 rounded-lg border border-border bg-surface p-4 transition-all hover:border-accent/30 hover:shadow-sm"
+        >
+          <div class="flex h-10 w-10 items-center justify-center rounded-full bg-accent/10 text-accent">
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </div>
+          <div>
+            <span class="font-display text-sm font-medium text-ink group-hover:text-accent">Hansard Records</span>
+            <span class="block font-ui text-xs text-ink/50">Official debate transcripts</span>
+          </div>
+        </a>
+        
+        <a
+          href="https://www.parliament.gov.sg/parliamentary-business/order-paper"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="group flex items-center gap-3 rounded-lg border border-border bg-surface p-4 transition-all hover:border-accent/30 hover:shadow-sm"
+        >
+          <div class="flex h-10 w-10 items-center justify-center rounded-full bg-accent/10 text-accent">
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+            </svg>
+          </div>
+          <div>
+            <span class="font-display text-sm font-medium text-ink group-hover:text-accent">Order Paper</span>
+            <span class="block font-ui text-xs text-ink/50">Parliament agenda</span>
+          </div>
+        </a>
+        
+        <a
+          href="https://www.youtube.com/@SingaporeMDDI/streams"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="group flex items-center gap-3 rounded-lg border border-border bg-surface p-4 transition-all hover:border-accent/30 hover:shadow-sm"
+        >
+          <div class="flex h-10 w-10 items-center justify-center rounded-full bg-accent/10 text-accent">
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+          </div>
+          <div>
+            <span class="font-display text-sm font-medium text-ink group-hover:text-accent">Live Streams</span>
+            <span class="block font-ui text-xs text-ink/50">MDDI YouTube channel</span>
+          </div>
+        </a>
+      </div>
     </section>
   </div>
 </Layout>

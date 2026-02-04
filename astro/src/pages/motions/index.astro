@@ -1,5 +1,6 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import SectionLabel from '../../components/SectionLabel.astro';
 import QuestionCard from '../../components/QuestionCard.astro';
 import Pagination from '../../components/Pagination.astro';
 import { getMotions, getMotionCount } from '../../lib/db';
@@ -9,21 +10,24 @@ const totalCount = getMotionCount();
 ---
 
 <Layout title="Motions" description="Browse Singapore Parliament motions">
-  <h1 class="mb-2 text-3xl font-bold text-zinc-900">
+  <SectionLabel>Parliamentary Proceedings</SectionLabel>
+  
+  <h1 class="font-display text-display-lg text-ink mb-4 animate-fade-up">
     Motions
   </h1>
-  <p class="mb-6 text-zinc-600">
+  
+  <p class="font-body text-base text-ink-soft leading-relaxed max-w-[58ch] mb-8 animate-fade-up animate-delay-100">
     Browse parliamentary motions and adjournment motions. Motions are formal proposals put before
     Parliament for debate and decision. Click on a motion to see the full transcript.
   </p>
 
-  <p class="mb-4 text-sm text-zinc-500">
+  <p class="font-sans text-sm text-ink-muted mb-6">
     Showing {motions.length} of {totalCount} motions
   </p>
 
-  <div id="motions-list" class="grid gap-4 sm:grid-cols-2">
+  <div id="motions-list" class="flex flex-col border-t border-border">
     {motions.length === 0 ? (
-      <p class="col-span-full py-8 text-center text-zinc-500">
+      <p class="py-12 text-center font-body text-ink-muted">
         No motions found
       </p>
     ) : (

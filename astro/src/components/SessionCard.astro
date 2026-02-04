@@ -15,28 +15,23 @@ function getOrdinal(n: number): string {
 }
 
 const formattedDate = new Date(session.date).toLocaleDateString('en-SG', {
-  weekday: 'long',
-  year: 'numeric',
-  month: 'long',
   day: 'numeric',
+  month: 'long',
+  year: 'numeric',
 });
 ---
 
 <a
   href={`/sessions/${session.id}`}
-  class="block rounded-lg border border-zinc-200 bg-white p-5 shadow-sm transition-all hover:border-blue-300 hover:shadow-md"
+  class="group grid grid-cols-[140px_1fr_auto] items-center gap-6 py-4 border-b border-border transition-colors hover:bg-warm cursor-pointer"
 >
-  <div class="mb-2 flex flex-wrap items-center gap-3">
-    <span class="text-lg font-semibold text-zinc-900">
-      {formattedDate}
-    </span>
-    {session.sectionCount !== undefined && (
-      <span class="rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-700">
-        {session.sectionCount} sections
-      </span>
-    )}
+  <div class="font-display text-base text-ink">
+    {formattedDate}
   </div>
-  <div class="text-sm text-zinc-500">
-    {getOrdinal(session.parliament)} Parliament, {getOrdinal(session.sessionNo)} Session, {getOrdinal(session.sittingNo)} Sitting
+  <div class="font-sans text-sm text-ink-muted">
+    {getOrdinal(session.parliament)} Parliament · {getOrdinal(session.sessionNo)} Session · {getOrdinal(session.sittingNo)} Sitting
+  </div>
+  <div class="font-sans text-xs text-ink-soft">
+    {session.sectionCount !== undefined && `${session.sectionCount} items`}
   </div>
 </a>

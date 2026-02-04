@@ -1,6 +1,8 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import SectionLabel from '../../components/SectionLabel.astro';
 import SectionCard from '../../components/SectionCard.astro';
+import Tag from '../../components/Tag.astro';
 import { getSessions, getSession, getSessionSections, getSessionAttendees, getSessionBills } from '../../lib/db';
 
 export async function getStaticPaths() {
@@ -50,30 +52,29 @@ const absentMembers = attendees.filter(a => !a.present);
 ---
 
 <Layout title={formattedDate} description={`Parliament sitting on ${formattedDate}`}>
-  <a href="/sessions" class="mb-6 inline-flex items-center text-sm text-blue-600 hover:underline">
-    &larr; Back to Sittings
+  <a href="/sessions" class="inline-flex items-center font-sans text-sm text-accent hover:text-accent-light no-underline mb-6">
+    ← Back to Sittings
   </a>
 
-  <header class="mb-8">
-    <h1 class="mb-2 text-3xl font-bold text-zinc-900">
+  <header class="mb-10">
+    <SectionLabel>{getOrdinal(session.parliament)} Parliament · {getOrdinal(session.sessionNo)} Session</SectionLabel>
+    
+    <h1 class="font-display text-display-lg text-ink mb-3 animate-fade-up">
       {formattedDate}
     </h1>
-    <div class="flex flex-wrap gap-3 text-sm text-zinc-600">
-      <span>{getOrdinal(session.parliament)} Parliament</span>
-      <span>&bull;</span>
-      <span>{getOrdinal(session.sessionNo)} Session</span>
-      <span>&bull;</span>
+    
+    <div class="flex flex-wrap gap-3 font-sans text-sm text-ink-muted">
       <span>{getOrdinal(session.sittingNo)} Sitting</span>
       {session.url && (
         <>
-          <span>&bull;</span>
+          <span class="text-border">·</span>
           <a
             href={session.url}
             target="_blank"
             rel="noopener noreferrer"
-            class="text-blue-600 hover:underline"
+            class="text-accent hover:text-accent-light no-underline"
           >
-            Full report from Hansard &nearr;
+            Full report from Hansard ↗
           </a>
         </>
       )}
@@ -82,12 +83,12 @@ const absentMembers = attendees.filter(a => !a.present);
 
   <!-- Attendance -->
   {attendees.length > 0 && (
-    <section class="mb-8">
+    <section class="mb-10">
       <details class="group">
-        <summary class="mb-4 flex cursor-pointer items-center gap-2 text-xl font-semibold text-zinc-900 list-none">
+        <summary class="flex cursor-pointer items-center gap-2 font-sans text-sm uppercase tracking-wide text-ink-muted mb-4 list-none">
           <span>Members ({presentMembers.length} present, {absentMembers.length} absent)</span>
           <svg
-            class="h-5 w-5 transition-transform group-open:rotate-180"
+            class="h-4 w-4 transition-transform group-open:rotate-180"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -96,21 +97,21 @@ const absentMembers = attendees.filter(a => !a.present);
           </svg>
         </summary>
 
-        <div class="rounded-lg border border-zinc-200 bg-white p-5">
+        <div class="bg-surface border border-border rounded-md p-6">
           <!-- Present -->
-          <div class="mb-4">
-            <h3 class="mb-2 text-sm font-semibold uppercase text-green-600">
+          <div class="mb-6">
+            <h3 class="font-sans text-xs uppercase tracking-wide text-status-passed font-semibold mb-3">
               Present ({presentMembers.length})
             </h3>
             <div class="flex flex-wrap gap-2">
               {presentMembers.map((member) => (
                 <a
                   href={`/members/${member.id}`}
-                  class="rounded-full bg-green-50 px-3 py-1 text-sm text-green-700 transition-colors hover:bg-green-100"
+                  class="inline-flex items-center gap-1 bg-status-passed-bg text-status-passed px-3 py-1 rounded-full font-sans text-sm transition-colors hover:bg-green-200 no-underline"
                 >
                   {member.name}
                   {member.designation && (
-                    <span class="ml-1 text-green-500">
+                    <span class="text-status-passed/60 text-xs">
                       ({member.designation})
                     </span>
                   )}
@@ -122,14 +123,14 @@ const absentMembers = attendees.filter(a => !a.present);
           <!-- Absent -->
           {absentMembers.length > 0 && (
             <div>
-              <h3 class="mb-2 text-sm font-semibold uppercase text-zinc-500">
+              <h3 class="font-sans text-xs uppercase tracking-wide text-ink-muted font-semibold mb-3">
                 Absent ({absentMembers.length})
               </h3>
               <div class="flex flex-wrap gap-2">
                 {absentMembers.map((member) => (
                   <a
                     href={`/members/${member.id}`}
-                    class="rounded-full bg-zinc-100 px-3 py-1 text-sm text-zinc-500 transition-colors hover:bg-zinc-200"
+                    class="inline-flex items-center bg-border-light text-ink-muted px-3 py-1 rounded-full font-sans text-sm transition-colors hover:bg-border no-underline"
                   >
                     {member.name}
                   </a>
@@ -144,11 +145,11 @@ const absentMembers = attendees.filter(a => !a.present);
 
   <!-- Motions -->
   {motions.length > 0 && (
-    <section class="mb-8">
-      <h2 class="mb-4 text-xl font-semibold text-zinc-900">
-        Motions ({motions.length})
+    <section class="mb-10">
+      <h2 class="font-display text-xl text-ink mb-4">
+        Motions <span class="font-sans text-sm text-ink-muted font-normal">({motions.length})</span>
       </h2>
-      <div class="grid gap-4">
+      <div class="flex flex-col border-t border-border">
         {motions.map((section) => (
           <SectionCard section={section} />
         ))}
@@ -158,35 +159,27 @@ const absentMembers = attendees.filter(a => !a.present);
 
   <!-- Bills -->
   {bills.length > 0 && (
-    <section class="mb-8">
-      <h2 class="mb-4 text-xl font-semibold text-zinc-900">
-        Bills ({bills.length})
+    <section class="mb-10">
+      <h2 class="font-display text-xl text-ink mb-4">
+        Bills <span class="font-sans text-sm text-ink-muted font-normal">({bills.length})</span>
       </h2>
-      <div class="grid gap-4">
+      <div class="flex flex-col border-t border-border">
         {bills.map((bill) => (
-          <a href={`/bills/${bill.billId}`} class="block">
-            <div class="group rounded-lg border border-zinc-200 bg-white p-4 transition-all hover:border-purple-300 hover:shadow-md">
-              <div class="mb-2 flex flex-wrap items-center gap-2">
-                {bill.readingTypes.includes('BI') && (
-                  <span class="rounded bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700">
-                    1st Reading
-                  </span>
-                )}
-                {bill.readingTypes.includes('BP') && (
-                  <span class="rounded bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700">
-                    2nd Reading
-                  </span>
-                )}
-                {bill.ministry && (
-                  <span class="rounded bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
-                    {bill.ministry}
-                  </span>
-                )}
-              </div>
-              <h3 class="line-clamp-2 font-semibold text-zinc-900 group-hover:text-purple-600">
-                {bill.sectionTitle}
-              </h3>
+          <a href={`/bills/${bill.billId}`} class="group block p-5 border-b border-border transition-colors hover:bg-warm no-underline">
+            <div class="flex flex-wrap items-center gap-2 mb-2">
+              {bill.readingTypes.includes('BI') && (
+                <Tag color="muted">1st Reading</Tag>
+              )}
+              {bill.readingTypes.includes('BP') && (
+                <Tag color="accent">2nd Reading</Tag>
+              )}
+              {bill.ministry && (
+                <Tag color="green">{bill.ministry}</Tag>
+              )}
             </div>
+            <h3 class="font-display text-lg text-ink leading-snug line-clamp-2 group-hover:text-accent transition-colors">
+              {bill.sectionTitle}
+            </h3>
           </a>
         ))}
       </div>
@@ -194,14 +187,14 @@ const absentMembers = attendees.filter(a => !a.present);
   )}
 
   <!-- Oral Answers -->
-  <section class="mb-8">
-    <h2 class="mb-4 text-xl font-semibold text-zinc-900">
-      Oral Answers ({oralAnswers.length})
+  <section class="mb-10">
+    <h2 class="font-display text-xl text-ink mb-4">
+      Oral Answers <span class="font-sans text-sm text-ink-muted font-normal">({oralAnswers.length})</span>
     </h2>
     {oralAnswers.length === 0 ? (
-      <p class="py-4 text-zinc-500">No oral answers in this session</p>
+      <p class="py-8 font-body text-ink-muted">No oral answers in this session</p>
     ) : (
-      <div class="grid gap-4">
+      <div class="flex flex-col border-t border-border">
         {oralAnswers.map((section) => (
           <SectionCard section={section} />
         ))}
@@ -210,14 +203,14 @@ const absentMembers = attendees.filter(a => !a.present);
   </section>
 
   <!-- Written Answers -->
-  <section class="mb-8">
-    <h2 class="mb-4 text-xl font-semibold text-zinc-900">
-      Written Answers ({writtenAnswers.length})
+  <section class="mb-10">
+    <h2 class="font-display text-xl text-ink mb-4">
+      Written Answers <span class="font-sans text-sm text-ink-muted font-normal">({writtenAnswers.length})</span>
     </h2>
     {writtenAnswers.length === 0 ? (
-      <p class="py-4 text-zinc-500">No written answers in this session</p>
+      <p class="py-8 font-body text-ink-muted">No written answers in this session</p>
     ) : (
-      <div class="grid gap-4">
+      <div class="flex flex-col border-t border-border">
         {writtenAnswers.map((section) => (
           <SectionCard section={section} />
         ))}
@@ -227,11 +220,11 @@ const absentMembers = attendees.filter(a => !a.present);
 
   <!-- Clarifications -->
   {clarifications.length > 0 && (
-    <section class="mb-8">
-      <h2 class="mb-4 text-xl font-semibold text-zinc-900">
-        Clarifications ({clarifications.length})
+    <section class="mb-10">
+      <h2 class="font-display text-xl text-ink mb-4">
+        Clarifications <span class="font-sans text-sm text-ink-muted font-normal">({clarifications.length})</span>
       </h2>
-      <div class="grid gap-4">
+      <div class="flex flex-col border-t border-border">
         {clarifications.map((section) => (
           <SectionCard section={section} />
         ))}

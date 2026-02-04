@@ -1,5 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import SectionLabel from '../components/SectionLabel.astro';
 import SessionCard from '../components/SessionCard.astro';
 import { getSessions, getStats } from '../lib/db';
 
@@ -8,47 +9,108 @@ const stats = getStats();
 ---
 
 <Layout title="Home" description="Scribe - Singapore Parliament proceedings made accessible">
-  <div class="mb-12">
-    <h1 class="mb-4 text-4xl font-bold text-zinc-900">
-      Scribe
-    </h1>
-    <p class="max-w-2xl text-lg text-zinc-600">
-      Explore Singapore Parliament proceedings. Browse sittings, questions, bills, and motions
-      from the official Hansard records.
-    </p>
-  </div>
+  <!-- Hero Section -->
+  <section class="relative py-16 mb-12">
+    <!-- Ruled lines background -->
+    <div class="absolute inset-0 ruled-lines opacity-40 pointer-events-none"></div>
+    
+    <div class="relative">
+      <SectionLabel>Singapore Parliament · Hansard</SectionLabel>
+      
+      <h1 class="font-display font-light text-display-xl text-ink max-w-[16ch] mb-6 animate-fade-up">
+        Making Parliament<br />
+        <em class="font-normal italic text-accent">accessible</em> for all
+      </h1>
+      
+      <p class="font-body text-lg text-ink-soft leading-relaxed max-w-[48ch] mb-8 animate-fade-up animate-delay-100">
+        Scribe transforms Singapore's official Hansard into a clean, searchable, and readable format — so you can understand what's happening in Parliament without wading through walls of text.
+      </p>
+      
+      <div class="flex gap-3 animate-fade-up animate-delay-200">
+        <a
+          href="/bills"
+          class="inline-flex items-center font-sans text-sm tracking-wide font-medium bg-accent text-white px-5 py-2.5 rounded hover:bg-accent-light transition-colors no-underline"
+        >
+          Browse Bills
+        </a>
+        <a
+          href="/members"
+          class="inline-flex items-center font-sans text-sm tracking-wide font-medium bg-transparent text-ink border border-border px-5 py-2.5 rounded hover:bg-warm hover:border-ink-muted transition-colors no-underline"
+        >
+          Find Your MP
+        </a>
+      </div>
+    </div>
+  </section>
 
-  <!-- Stats -->
-  <div class="mb-12 grid grid-cols-2 gap-4 md:grid-cols-4">
-    <div class="rounded-lg border border-zinc-200 bg-white p-4 text-center">
-      <div class="text-3xl font-bold text-blue-600">{stats.sessionCount}</div>
-      <div class="text-sm text-zinc-500">Sittings</div>
+  <!-- Explore Section -->
+  <section class="mb-12">
+    <SectionLabel>Explore</SectionLabel>
+    
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {[
+        { label: 'Bills', desc: 'What legislation is being debated and passed?', href: '/bills', count: stats.billCount },
+        { label: 'MPs', desc: 'Who are your representatives and what do they do?', href: '/members', count: stats.memberCount },
+        { label: 'Questions', desc: 'What tough questions are being asked of Ministers?', href: '/questions', count: stats.sectionCount },
+      ].map((card, i) => (
+        <a
+          href={card.href}
+          class:list={[
+            'group block bg-surface border border-border rounded-md p-6 transition-all hover:-translate-y-0.5 hover:shadow-md no-underline',
+            `animate-fade-up`,
+          ]}
+          style={`animation-delay: ${0.15 + i * 0.08}s`}
+        >
+          <div class="font-sans text-label-sm uppercase tracking-widest text-accent font-semibold mb-1">
+            {card.count} records
+          </div>
+          <div class="font-display text-xl text-ink mb-1 group-hover:text-accent transition-colors">
+            {card.label}
+          </div>
+          <div class="font-body text-sm text-ink-muted leading-relaxed">
+            {card.desc}
+          </div>
+        </a>
+      ))}
     </div>
-    <div class="rounded-lg border border-zinc-200 bg-white p-4 text-center">
-      <div class="text-3xl font-bold text-green-600">{stats.memberCount}</div>
-      <div class="text-sm text-zinc-500">Members</div>
-    </div>
-    <div class="rounded-lg border border-zinc-200 bg-white p-4 text-center">
-      <div class="text-3xl font-bold text-purple-600">{stats.billCount}</div>
-      <div class="text-sm text-zinc-500">Bills</div>
-    </div>
-    <div class="rounded-lg border border-zinc-200 bg-white p-4 text-center">
-      <div class="text-3xl font-bold text-amber-600">{stats.sectionCount}</div>
-      <div class="text-sm text-zinc-500">Sections</div>
-    </div>
-  </div>
+  </section>
 
-  <!-- Recent Sessions -->
+  <!-- Stats Strip -->
+  <section class="mb-12 py-6 border-y border-border">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+      <div class="text-center">
+        <div class="font-display text-3xl text-ink mb-1">{stats.sessionCount}</div>
+        <div class="font-sans text-xs uppercase tracking-wide text-ink-muted">Sittings</div>
+      </div>
+      <div class="text-center">
+        <div class="font-display text-3xl text-ink mb-1">{stats.memberCount}</div>
+        <div class="font-sans text-xs uppercase tracking-wide text-ink-muted">Members</div>
+      </div>
+      <div class="text-center">
+        <div class="font-display text-3xl text-ink mb-1">{stats.billCount}</div>
+        <div class="font-sans text-xs uppercase tracking-wide text-ink-muted">Bills</div>
+      </div>
+      <div class="text-center">
+        <div class="font-display text-3xl text-ink mb-1">{stats.sectionCount}</div>
+        <div class="font-sans text-xs uppercase tracking-wide text-ink-muted">Sections</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Recent Sittings -->
   <section>
-    <div class="mb-4 flex items-center justify-between">
-      <h2 class="text-2xl font-semibold text-zinc-900">Recent Sittings</h2>
-      <a href="/sessions" class="text-sm text-blue-600 hover:underline">
-        View all &rarr;
+    <div class="flex items-baseline justify-between mb-4">
+      <SectionLabel class="mb-0">Latest Sittings</SectionLabel>
+      <a href="/sessions" class="font-sans text-xs text-accent hover:text-accent-light no-underline">
+        View all →
       </a>
     </div>
-    <div class="grid gap-4">
-      {recentSessions.map((session) => (
-        <SessionCard session={session} />
+    
+    <div class="flex flex-col">
+      {recentSessions.map((session, i) => (
+        <div style={`animation-delay: ${0.3 + i * 0.06}s`} class="animate-fade-up">
+          <SessionCard session={session} />
+        </div>
       ))}
     </div>
   </section>

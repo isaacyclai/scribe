@@ -1,5 +1,6 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import SectionLabel from '../../components/SectionLabel.astro';
 import MinistryCard from '../../components/MinistryCard.astro';
 import { getMinistries } from '../../lib/db';
 
@@ -7,26 +8,31 @@ const ministries = getMinistries();
 ---
 
 <Layout title="Ministries" description="Browse Singapore government ministries and their parliamentary activities">
-  <h1 class="mb-2 text-3xl font-bold text-zinc-900">
+  <SectionLabel>Government Departments</SectionLabel>
+  
+  <h1 class="font-display text-display-lg text-ink mb-4 animate-fade-up">
     Ministries
   </h1>
-  <p class="mb-6 text-zinc-600">
+  
+  <p class="font-body text-base text-ink-soft leading-relaxed max-w-[58ch] mb-8 animate-fade-up animate-delay-100">
     Browse government ministries and their involvement in parliamentary proceedings.
     Click on a ministry to see related questions, bills, and motions.
   </p>
 
-  <p class="mb-4 text-sm text-zinc-500">
+  <p class="font-sans text-sm text-ink-muted mb-6">
     Showing {ministries.length} ministries
   </p>
 
   <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
     {ministries.length === 0 ? (
-      <p class="col-span-full py-8 text-center text-zinc-500">
+      <p class="col-span-full py-12 text-center font-body text-ink-muted">
         No ministries found
       </p>
     ) : (
-      ministries.map((ministry) => (
-        <MinistryCard ministry={ministry} />
+      ministries.map((ministry, i) => (
+        <div class="animate-fade-up" style={`animation-delay: ${0.1 + i * 0.03}s`}>
+          <MinistryCard ministry={ministry} />
+        </div>
       ))
     )}
   </div>

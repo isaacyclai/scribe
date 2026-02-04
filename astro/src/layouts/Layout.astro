@@ -7,7 +7,7 @@ interface Props {
   description?: string;
 }
 
-const { title, description = 'Singapore Parliament proceedings' } = Astro.props;
+const { title, description = 'Singapore Parliament proceedings made accessible' } = Astro.props;
 ---
 
 <!doctype html>
@@ -17,16 +17,21 @@ const { title, description = 'Singapore Parliament proceedings' } = Astro.props;
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={description} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <title>{title} | Scribe</title>
   </head>
-  <body class="min-h-screen bg-white">
+  <body class="min-h-screen bg-page-bg">
     <Navbar />
-    <main class="mx-auto max-w-6xl px-4 py-8">
+    <main class="mx-auto max-w-content px-6 py-8">
       <slot />
     </main>
-    <footer class="border-t border-zinc-200 py-8 text-center text-sm text-zinc-500">
-      <div class="mx-auto max-w-6xl px-4">
-        <p>Data sourced from the Singapore Parliament Hansard</p>
+    <footer class="border-t border-border animate-fade-in">
+      <div class="mx-auto max-w-content px-6 py-10 text-center">
+        <p class="font-sans text-sm text-ink-muted leading-relaxed">
+          Data sourced from the official <a href="https://sprs.parl.gov.sg/search/#/home" class="text-accent hover:text-accent-light no-underline">Hansard</a>.
+          Scribe is an independent project and is not affiliated with the Singapore Government.
+        </p>
       </div>
     </footer>
   </body>

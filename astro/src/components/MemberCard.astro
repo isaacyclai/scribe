@@ -1,11 +1,25 @@
 ---
 import type { Member } from '../lib/db';
+import Avatar from './Avatar.astro';
+import PartyBadge from './PartyBadge.astro';
 
 interface Props {
   member: Member;
 }
 
 const { member } = Astro.props;
+
+// Try to extract party from designation or other fields
+const getParty = (member: Member): string | null => {
+  // Check if there's a party field or extract from designation
+  if (member.designation?.includes('Workers')) return 'WP';
+  if (member.designation?.includes('Progress')) return 'PSP';
+  // Default assumption for ministers/parliamentary secretaries
+  if (member.designation?.includes('Minister') || member.designation?.includes('Secretary')) return 'PAP';
+  return null;
+};
+
+const party = getParty(member);
 
 const attendancePercent = member.attendanceTotal && member.attendanceTotal > 0
   ? Math.round((member.attendancePresent! / member.attendanceTotal) * 100)
@@ -14,31 +28,43 @@ const attendancePercent = member.attendanceTotal && member.attendanceTotal > 0
 
 <a
   href={`/members/${member.id}`}
-  class="block rounded-lg border border-zinc-200 bg-white p-4 transition-all hover:border-blue-300 hover:shadow-md"
+  class="group flex gap-4 items-start p-4 bg-surface border border-border rounded-md transition-all hover:-translate-y-0.5 hover:shadow-md cursor-pointer"
 >
-  <h3 class="mb-2 font-semibold text-zinc-900">
-    {member.name}
-  </h3>
-  <div class="mb-2 flex flex-wrap items-center gap-2">
-    {member.designation && (
-      <span class="text-sm text-zinc-600">
-        {member.designation}
+  <Avatar name={member.name} party={party || undefined} />
+  
+  <div class="flex-1 min-w-0">
+    <div class="flex items-center gap-2 mb-0.5">
+      <span class="font-display text-base text-ink font-medium group-hover:text-accent transition-colors">
+        {member.name}
       </span>
-    )}
+      {party && <PartyBadge party={party} />}
+    </div>
+    
     {member.constituency && (
-      <span class="rounded bg-zinc-100 px-2 py-0.5 text-xs text-zinc-600">
+      <div class="font-sans text-xs text-ink-muted mb-1">
         {member.constituency}
-      </span>
+      </div>
     )}
-  </div>
-  <div class="flex flex-wrap items-center gap-3 text-xs text-zinc-500">
-    {member.sectionCount !== undefined && member.sectionCount > 0 && (
-      <span>{member.sectionCount} sections</span>
+    
+    {member.designation && (
+      <div class="font-sans text-xs text-ink-muted mb-2 line-clamp-1">
+        {member.designation}
+      </div>
     )}
-    {attendancePercent !== null && (
-      <span class={attendancePercent >= 80 ? 'text-green-600' : attendancePercent >= 50 ? 'text-amber-600' : 'text-red-500'}>
-        {attendancePercent}% attendance
-      </span>
-    )}
+    
+    <div class="font-sans text-xs text-accent font-medium">
+      {member.sectionCount !== undefined && member.sectionCount > 0 && (
+        <span>{member.sectionCount} speeches</span>
+      )}
+      {attendancePercent !== null && (
+        <span class:list={[
+          'ml-2',
+          attendancePercent >= 80 ? 'text-status-passed' : 
+          attendancePercent >= 50 ? 'text-status-reading' : 'text-red-600'
+        ]}>
+          · {attendancePercent}% attendance
+        </span>
+      )}
+    </div>
   </div>
 </a>
