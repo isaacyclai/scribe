@@ -1,0 +1,33 @@
+---
+import Navbar from '../components/Navbar.astro';
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description = 'Singapore Parliament proceedings' } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{title} | Scribe</title>
+  </head>
+  <body class="min-h-screen bg-white">
+    <Navbar />
+    <main class="mx-auto max-w-6xl px-4 py-8">
+      <slot />
+    </main>
+    <footer class="border-t border-zinc-200 py-8 text-center text-sm text-zinc-500">
+      <div class="mx-auto max-w-6xl px-4">
+        <p>Data sourced from the Singapore Parliament Hansard</p>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,55 @@
+---
+import Layout from '../layouts/Layout.astro';
+import SessionCard from '../components/SessionCard.astro';
+import { getSessions, getStats } from '../lib/db';
+
+const recentSessions = getSessions(5);
+const stats = getStats();
+---
+
+<Layout title="Home" description="Scribe - Singapore Parliament proceedings made accessible">
+  <div class="mb-12">
+    <h1 class="mb-4 text-4xl font-bold text-zinc-900">
+      Scribe
+    </h1>
+    <p class="max-w-2xl text-lg text-zinc-600">
+      Explore Singapore Parliament proceedings. Browse sittings, questions, bills, and motions
+      from the official Hansard records.
+    </p>
+  </div>
+
+  <!-- Stats -->
+  <div class="mb-12 grid grid-cols-2 gap-4 md:grid-cols-4">
+    <div class="rounded-lg border border-zinc-200 bg-white p-4 text-center">
+      <div class="text-3xl font-bold text-blue-600">{stats.sessionCount}</div>
+      <div class="text-sm text-zinc-500">Sittings</div>
+    </div>
+    <div class="rounded-lg border border-zinc-200 bg-white p-4 text-center">
+      <div class="text-3xl font-bold text-green-600">{stats.memberCount}</div>
+      <div class="text-sm text-zinc-500">Members</div>
+    </div>
+    <div class="rounded-lg border border-zinc-200 bg-white p-4 text-center">
+      <div class="text-3xl font-bold text-purple-600">{stats.billCount}</div>
+      <div class="text-sm text-zinc-500">Bills</div>
+    </div>
+    <div class="rounded-lg border border-zinc-200 bg-white p-4 text-center">
+      <div class="text-3xl font-bold text-amber-600">{stats.sectionCount}</div>
+      <div class="text-sm text-zinc-500">Sections</div>
+    </div>
+  </div>
+
+  <!-- Recent Sessions -->
+  <section>
+    <div class="mb-4 flex items-center justify-between">
+      <h2 class="text-2xl font-semibold text-zinc-900">Recent Sittings</h2>
+      <a href="/sessions" class="text-sm text-blue-600 hover:underline">
+        View all &rarr;
+      </a>
+    </div>
+    <div class="grid gap-4">
+      {recentSessions.map((session) => (
+        <SessionCard session={session} />
+      ))}
+    </div>
+  </section>
+</Layout>

@@ -1,0 +1,369 @@
+import Database from 'better-sqlite3';
+import path from 'path';
+
+// Connect to SQLite database
+const dbPath = path.join(process.cwd(), '..', 'data', 'parliament.db');
+const db = new Database(dbPath, { readonly: true });
+
+// Enable WAL mode for better read performance
+db.pragma('journal_mode = WAL');
+
+// Types
+export interface Session {
+  id: string;
+  date: string;
+  sittingNo: number;
+  parliament: number;
+  sessionNo: number;
+  volumeNo: number;
+  format: string;
+  url: string;
+  sectionCount?: number;
+}
+
+export interface Member {
+  id: string;
+  name: string;
+  summary?: string | null;
+  sectionCount?: number;
+  constituency?: string | null;
+  designation?: string | null;
+  attendanceTotal?: number;
+  attendancePresent?: number;
+}
+
+export interface Ministry {
+  id: string;
+  name: string;
+  acronym: string;
+  sectionCount?: number;
+}
+
+export interface Speaker {
+  memberId: string;
+  name: string;
+  constituency: string | null;
+  designation: string | null;
+}
+
+export interface Section {
+  id: string;
+  sessionId: string;
+  sessionDate?: string;
+  sittingNo?: number;
+  sectionType: string;
+  sectionTitle: string;
+  contentHtml?: string;
+  contentPlain?: string;
+  sectionOrder: number;
+  ministry: string | null;
+  ministryId: string | null;
+  category: string | null;
+  speakers?: Speaker[];
+  sourceUrl?: string | null;
+  summary?: string | null;
+}
+
+export interface Bill {
+  id: string;
+  title: string;
+  ministryId: string | null;
+  ministry?: string | null;
+  firstReadingDate: string | null;
+  firstReadingSessionId: string | null;
+  summary?: string | null;
+}
+
+export interface Attendee {
+  id: string;
+  name: string;
+  present: boolean;
+  constituency: string | null;
+  designation: string | null;
+}
+
+// Query functions
+
+export function getSessions(limit?: number, offset?: number): Session[] {
+  const sql = `
+    SELECT
+      s.id,
+      s.date,
+      s.sitting_no as sittingNo,
+      s.parliament,
+      s.session_no as sessionNo,
+      s.volume_no as volumeNo,
+      s.format,
+      s.url,
+      COUNT(sec.id) as sectionCount
+    FROM sessions s
+    LEFT JOIN sections sec ON s.id = sec.session_id
+    GROUP BY s.id
+    ORDER BY s.date DESC
+    ${limit ? `LIMIT ${limit}` : ''}
+    ${offset ? `OFFSET ${offset}` : ''}
+  `;
+  return db.prepare(sql).all() as Session[];
+}
+
+export function getSessionCount(): number {
+  const result = db.prepare('SELECT COUNT(*) as count FROM sessions').get() as { count: number };
+  return result.count;
+}
+
+export function getSession(id: string): Session | undefined {
+  const sql = `
+    SELECT
+      id,
+      date,
+      sitting_no as sittingNo,
+      parliament,
+      session_no as sessionNo,
+      volume_no as volumeNo,
+      format,
+      url
+    FROM sessions
+    WHERE id = ?
+  `;
+  return db.prepare(sql).get(id) as Session | undefined;
+}
+
+export function getSessionSections(sessionId: string): Section[] {
+  const sql = `
+    SELECT
+      sec.id,
+      sec.session_id as sessionId,
+      sec.section_type as sectionType,
+      sec.section_title as sectionTitle,
+      sec.content_html as contentHtml,
+      sec.content_plain as contentPlain,
+      sec.section_order as sectionOrder,
+      sec.category,
+      sec.source_url as sourceUrl,
+      sec.summary,
+      m.name as ministry,
+      sec.ministry_id as ministryId,
+      sec.bill_id as billId
+    FROM sections sec
+    LEFT JOIN ministries m ON sec.ministry_id = m.id
+    WHERE sec.session_id = ?
+    ORDER BY sec.section_order ASC
+  `;
+  const sections = db.prepare(sql).all(sessionId) as Section[];
+
+  // Get speakers for each section
+  const speakerSql = `
+    SELECT
+      ss.section_id as sectionId,
+      ss.member_id as memberId,
+      m.name,
+      ss.constituency,
+      ss.designation
+    FROM section_speakers ss
+    JOIN members m ON ss.member_id = m.id
+    WHERE ss.section_id IN (${sections.map(() => '?').join(',')})
+  `;
+
+  if (sections.length > 0) {
+    const speakers = db.prepare(speakerSql).all(...sections.map(s => s.id)) as (Speaker & { sectionId: string })[];
+    const speakerMap = new Map<string, Speaker[]>();
+
+    for (const speaker of speakers) {
+      if (!speakerMap.has(speaker.sectionId)) {
+        speakerMap.set(speaker.sectionId, []);
+      }
+      speakerMap.get(speaker.sectionId)!.push({
+        memberId: speaker.memberId,
+        name: speaker.name,
+        constituency: speaker.constituency,
+        designation: speaker.designation,
+      });
+    }
+
+    for (const section of sections) {
+      section.speakers = speakerMap.get(section.id) || [];
+    }
+  }
+
+  return sections;
+}
+
+export function getSessionAttendees(sessionId: string): Attendee[] {
+  const sql = `
+    SELECT
+      m.id,
+      m.name,
+      sa.present,
+      sa.constituency,
+      sa.designation
+    FROM session_attendance sa
+    JOIN members m ON sa.member_id = m.id
+    WHERE sa.session_id = ?
+    ORDER BY m.name ASC
+  `;
+  const results = db.prepare(sql).all(sessionId) as { id: string; name: string; present: number; constituency: string | null; designation: string | null }[];
+  return results.map(r => ({
+    ...r,
+    present: r.present === 1,
+  }));
+}
+
+export function getSessionBills(sessionId: string): { billId: string; sectionTitle: string; ministry: string | null; ministryId: string | null; readingTypes: string[]; sectionOrder: number }[] {
+  const sql = `
+    SELECT
+      sec.bill_id as billId,
+      sec.section_title as sectionTitle,
+      m.name as ministry,
+      sec.ministry_id as ministryId,
+      sec.section_type as sectionType,
+      sec.section_order as sectionOrder
+    FROM sections sec
+    LEFT JOIN ministries m ON sec.ministry_id = m.id
+    WHERE sec.session_id = ? AND sec.bill_id IS NOT NULL
+    ORDER BY sec.section_order ASC
+  `;
+  const results = db.prepare(sql).all(sessionId) as { billId: string; sectionTitle: string; ministry: string | null; ministryId: string | null; sectionType: string; sectionOrder: number }[];
+
+  // Group by bill and collect reading types
+  const billMap = new Map<string, { billId: string; sectionTitle: string; ministry: string | null; ministryId: string | null; readingTypes: string[]; sectionOrder: number }>();
+
+  for (const row of results) {
+    if (!billMap.has(row.billId)) {
+      billMap.set(row.billId, {
+        billId: row.billId,
+        sectionTitle: row.sectionTitle,
+        ministry: row.ministry,
+        ministryId: row.ministryId,
+        readingTypes: [],
+        sectionOrder: row.sectionOrder,
+      });
+    }
+    billMap.get(row.billId)!.readingTypes.push(row.sectionType);
+  }
+
+  return Array.from(billMap.values());
+}
+
+export function getMembers(limit?: number, offset?: number): Member[] {
+  const sql = `
+    SELECT
+      m.id,
+      m.name,
+      ms.summary,
+      COUNT(DISTINCT ss.section_id) as sectionCount
+    FROM members m
+    LEFT JOIN member_summaries ms ON m.id = ms.member_id
+    LEFT JOIN section_speakers ss ON m.id = ss.member_id
+    GROUP BY m.id
+    ORDER BY m.name ASC
+    ${limit ? `LIMIT ${limit}` : ''}
+    ${offset ? `OFFSET ${offset}` : ''}
+  `;
+  return db.prepare(sql).all() as Member[];
+}
+
+export function getMemberCount(): number {
+  const result = db.prepare('SELECT COUNT(*) as count FROM members').get() as { count: number };
+  return result.count;
+}
+
+export function getMember(id: string): Member | undefined {
+  const sql = `
+    SELECT
+      m.id,
+      m.name,
+      ms.summary,
+      COUNT(DISTINCT ss.section_id) as sectionCount,
+      (SELECT COUNT(*) FROM session_attendance WHERE member_id = m.id) as attendanceTotal,
+      (SELECT COUNT(*) FROM session_attendance WHERE member_id = m.id AND present = 1) as attendancePresent
+    FROM members m
+    LEFT JOIN member_summaries ms ON m.id = ms.member_id
+    LEFT JOIN section_speakers ss ON m.id = ss.member_id
+    WHERE m.id = ?
+    GROUP BY m.id
+  `;
+  return db.prepare(sql).get(id) as Member | undefined;
+}
+
+export function getBills(limit?: number, offset?: number): Bill[] {
+  const sql = `
+    SELECT
+      b.id,
+      b.title,
+      b.ministry_id as ministryId,
+      m.name as ministry,
+      b.first_reading_date as firstReadingDate,
+      b.first_reading_session_id as firstReadingSessionId,
+      b.summary
+    FROM bills b
+    LEFT JOIN ministries m ON b.ministry_id = m.id
+    ORDER BY b.first_reading_date DESC NULLS LAST
+    ${limit ? `LIMIT ${limit}` : ''}
+    ${offset ? `OFFSET ${offset}` : ''}
+  `;
+  return db.prepare(sql).all() as Bill[];
+}
+
+export function getBillCount(): number {
+  const result = db.prepare('SELECT COUNT(*) as count FROM bills').get() as { count: number };
+  return result.count;
+}
+
+export function getBill(id: string): Bill | undefined {
+  const sql = `
+    SELECT
+      b.id,
+      b.title,
+      b.ministry_id as ministryId,
+      m.name as ministry,
+      b.first_reading_date as firstReadingDate,
+      b.first_reading_session_id as firstReadingSessionId,
+      b.summary
+    FROM bills b
+    LEFT JOIN ministries m ON b.ministry_id = m.id
+    WHERE b.id = ?
+  `;
+  return db.prepare(sql).get(id) as Bill | undefined;
+}
+
+export function getMinistries(): Ministry[] {
+  const sql = `
+    SELECT
+      m.id,
+      m.name,
+      m.acronym,
+      COUNT(sec.id) as sectionCount
+    FROM ministries m
+    LEFT JOIN sections sec ON m.id = sec.ministry_id
+    GROUP BY m.id
+    ORDER BY m.name ASC
+  `;
+  return db.prepare(sql).all() as Ministry[];
+}
+
+export function getMinistry(id: string): Ministry | undefined {
+  const sql = `
+    SELECT
+      m.id,
+      m.name,
+      m.acronym,
+      COUNT(sec.id) as sectionCount
+    FROM ministries m
+    LEFT JOIN sections sec ON m.id = sec.ministry_id
+    WHERE m.id = ?
+    GROUP BY m.id
+  `;
+  return db.prepare(sql).get(id) as Ministry | undefined;
+}
+
+// Stats for home page
+export function getStats(): { sessionCount: number; memberCount: number; billCount: number; sectionCount: number } {
+  const sessionCount = (db.prepare('SELECT COUNT(*) as count FROM sessions').get() as { count: number }).count;
+  const memberCount = (db.prepare('SELECT COUNT(*) as count FROM members').get() as { count: number }).count;
+  const billCount = (db.prepare('SELECT COUNT(*) as count FROM bills').get() as { count: number }).count;
+  const sectionCount = (db.prepare('SELECT COUNT(*) as count FROM sections').get() as { count: number }).count;
+
+  return { sessionCount, memberCount, billCount, sectionCount };
+}
+
+export default db;

@@ -1,0 +1,42 @@
+---
+import type { Session } from '../lib/db';
+
+interface Props {
+  session: Session;
+}
+
+const { session } = Astro.props;
+
+// Helper to format ordinal numbers (1st, 2nd, 3rd, etc.)
+function getOrdinal(n: number): string {
+  const s = ['th', 'st', 'nd', 'rd'];
+  const v = n % 100;
+  return n + (s[(v - 20) % 10] || s[v] || s[0]);
+}
+
+const formattedDate = new Date(session.date).toLocaleDateString('en-SG', {
+  weekday: 'long',
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+});
+---
+
+<a
+  href={`/sessions/${session.id}`}
+  class="block rounded-lg border border-zinc-200 bg-white p-5 shadow-sm transition-all hover:border-blue-300 hover:shadow-md"
+>
+  <div class="mb-2 flex flex-wrap items-center gap-3">
+    <span class="text-lg font-semibold text-zinc-900">
+      {formattedDate}
+    </span>
+    {session.sectionCount !== undefined && (
+      <span class="rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-700">
+        {session.sectionCount} sections
+      </span>
+    )}
+  </div>
+  <div class="text-sm text-zinc-500">
+    {getOrdinal(session.parliament)} Parliament, {getOrdinal(session.sessionNo)} Session, {getOrdinal(session.sittingNo)} Sitting
+  </div>
+</a>
