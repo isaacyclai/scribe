@@ -11,17 +11,19 @@ const { ministry } = Astro.props;
 
 <a
   href={`/ministries/${ministry.id}`}
-  class="group block bg-surface border border-border rounded-md p-5 transition-all hover:-translate-y-0.5 hover:shadow-md no-underline"
+  class="group block h-full bg-surface border border-border rounded-md p-5 transition-all hover:-translate-y-0.5 hover:shadow-md no-underline"
 >
-  <div class="flex items-center gap-2 mb-2">
-    <Tag color="green">{ministry.acronym}</Tag>
+  <div class="flex h-full flex-col">
+    <div class="flex items-center gap-2 mb-2">
+      <Tag color="green">{ministry.acronym}</Tag>
+    </div>
+    <h3 class="font-display text-lg text-ink mb-2 group-hover:text-accent transition-colors">
+      {ministry.name}
+    </h3>
+    {ministry.sectionCount !== undefined && ministry.sectionCount > 0 && (
+      <p class="mt-auto font-sans text-xs text-ink-muted">
+        {ministry.sectionCount} sections
+      </p>
+    )}
   </div>
-  <h3 class="font-display text-lg text-ink mb-2 group-hover:text-accent transition-colors">
-    {ministry.name}
-  </h3>
-  {ministry.sectionCount !== undefined && ministry.sectionCount > 0 && (
-    <p class="font-sans text-xs text-ink-muted">
-      {ministry.sectionCount} sections
-    </p>
-  )}
 </a>
