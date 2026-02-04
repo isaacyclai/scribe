@@ -40,8 +40,11 @@ const totalCount = getSessionCount();
         No sessions found
       </p>
     ) : (
-      sessions.map((session) => (
-        <div class="session-item">
+      sessions.map((session, i) => (
+        <div
+          class="session-item animate-fade-up"
+          style={`animation-delay: ${0.1 + i * 0.03}s`}
+        >
           <SessionCard session={session} />
         </div>
       ))

@@ -31,8 +31,11 @@ const totalCount = getMotionCount();
         No motions found
       </p>
     ) : (
-      motions.map((motion) => (
-        <div class="motion-item">
+      motions.map((motion, i) => (
+        <div
+          class="motion-item animate-fade-up"
+          style={`animation-delay: ${0.1 + i * 0.03}s`}
+        >
           <QuestionCard section={motion} />
         </div>
       ))

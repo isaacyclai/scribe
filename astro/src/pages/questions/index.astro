@@ -31,8 +31,11 @@ const totalCount = getQuestionCount();
         No questions found
       </p>
     ) : (
-      questions.map((question) => (
-        <div class="question-item">
+      questions.map((question, i) => (
+        <div
+          class="question-item animate-fade-up"
+          style={`animation-delay: ${0.1 + i * 0.03}s`}
+        >
           <QuestionCard section={question} />
         </div>
       ))

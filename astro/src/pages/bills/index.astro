@@ -31,7 +31,10 @@ const totalCount = getBillCount();
       </p>
     ) : (
       bills.map((bill, i) => (
-        <div class="bill-item" style={`animation-delay: ${0.1 + i * 0.03}s`}>
+        <div
+          class="bill-item animate-fade-up"
+          style={`animation-delay: ${0.1 + i * 0.03}s`}
+        >
           <BillCard bill={bill} />
         </div>
       ))
