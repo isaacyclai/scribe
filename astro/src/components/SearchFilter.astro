@@ -1,0 +1,253 @@
+---
+interface Props {
+  containerId: string;
+  itemSelector: string;
+  contentType: "member" | "question" | "bill" | "motion" | "session";
+  placeholder?: string;
+}
+
+const {
+  containerId,
+  itemSelector,
+  contentType,
+  placeholder = "Search...",
+} = Astro.props;
+---
+
+<div
+  class="search-filter-wrapper mb-6"
+  data-container={containerId}
+  data-selector={itemSelector}
+  data-type={contentType}
+>
+  <div class="relative">
+    <svg
+      class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-ink/40 pointer-events-none"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="1.5"
+        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+    </svg>
+    <input
+      type="text"
+      class="search-filter-input w-full rounded-lg border border-border bg-surface px-4 py-2.5 pl-10 pr-10 font-ui text-sm text-ink placeholder:text-ink/40 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/20 transition-colors"
+      placeholder={placeholder}
+      autocomplete="off"
+      spellcheck="false"
+    />
+    <button
+      type="button"
+      class="search-filter-clear absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-ink/40 hover:text-ink transition-colors hidden"
+      aria-label="Clear search"
+    >
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M6 18L18 6M6 6l12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <p class="search-filter-status mt-2 font-sans text-sm text-ink-muted hidden">
+  </p>
+</div>
+
+<script>
+  interface PagefindResult {
+    id: string;
+    data: () => Promise<{
+      meta?: { id?: string };
+      url: string;
+      excerpt: string;
+    }>;
+  }
+
+  interface PagefindSearch {
+    results: PagefindResult[];
+  }
+
+  interface Pagefind {
+    search: (
+      query: string,
+      options?: { filters?: Record<string, string> },
+    ) => Promise<PagefindSearch>;
+  }
+
+  let pagefind: Pagefind | null = null;
+
+  async function loadPagefind(): Promise<Pagefind | null> {
+    if (pagefind) return pagefind;
+    try {
+      // Use window location to build the path dynamically at runtime
+      const base = import.meta.env.BASE_URL || "/";
+      const pagefindPath = `${base}pagefind/pagefind.js`.replace(/\/+/g, "/");
+      pagefind = (await import(/* @vite-ignore */ pagefindPath)) as Pagefind;
+      return pagefind;
+    } catch (e) {
+      console.warn(
+        "Pagefind not available - using fallback text search. Run `bun run build` to generate the search index.",
+      );
+      return null;
+    }
+  }
+
+  function initSearchFilters() {
+    document.querySelectorAll(".search-filter-wrapper").forEach((wrapper) => {
+      const containerId = wrapper.getAttribute("data-container");
+      const selector = wrapper.getAttribute("data-selector");
+      const contentType = wrapper.getAttribute("data-type");
+
+      const container = document.getElementById(containerId!);
+      if (!container) return;
+
+      const input = wrapper.querySelector(
+        ".search-filter-input",
+      ) as HTMLInputElement;
+      const clearBtn = wrapper.querySelector(
+        ".search-filter-clear",
+      ) as HTMLButtonElement;
+      const status = wrapper.querySelector(
+        ".search-filter-status",
+      ) as HTMLElement;
+
+      if (!input) return;
+
+      // Check if already initialized
+      if (input.hasAttribute("data-search-initialized")) return;
+      input.setAttribute("data-search-initialized", "true");
+
+      const items = container.querySelectorAll(
+        selector!,
+      ) as NodeListOf<HTMLElement>;
+
+      let debounceTimer: ReturnType<typeof setTimeout>;
+
+      async function performSearch(query: string) {
+        const pf = await loadPagefind();
+
+        if (!query.trim()) {
+          // Clear search - show all items
+          items.forEach((item) => {
+            item.style.display = "";
+            item.removeAttribute("data-search-hidden");
+          });
+          status.classList.add("hidden");
+          clearBtn.classList.add("hidden");
+
+          // Dispatch event for pagination to reset
+          container.dispatchEvent(new CustomEvent("search-cleared"));
+          return;
+        }
+
+        clearBtn.classList.remove("hidden");
+
+        if (!pf) {
+          // Fallback: simple text matching when pagefind isn't available
+          const lowerQuery = query.toLowerCase();
+          let matchCount = 0;
+
+          items.forEach((item) => {
+            const text = item.textContent?.toLowerCase() || "";
+            if (text.includes(lowerQuery)) {
+              item.style.display = "";
+              item.removeAttribute("data-search-hidden");
+              matchCount++;
+            } else {
+              item.style.display = "none";
+              item.setAttribute("data-search-hidden", "true");
+            }
+          });
+
+          status.textContent = `Found ${matchCount} result${matchCount !== 1 ? "s" : ""}`;
+          status.classList.remove("hidden");
+          container.dispatchEvent(
+            new CustomEvent("search-updated", { detail: { matchCount } }),
+          );
+          return;
+        }
+
+        // Use pagefind with type filter
+        const results = await pf.search(query, {
+          filters: { type: contentType! },
+        });
+
+        // Get all matching IDs
+        const matchingIds = new Set<string>();
+        for (const result of results.results) {
+          const data = await result.data();
+          if (data.meta?.id) {
+            matchingIds.add(data.meta.id);
+          }
+        }
+
+        // Show/hide items based on matches
+        let matchCount = 0;
+        items.forEach((item) => {
+          const anchor = item.querySelector(
+            "a[data-pagefind-meta]",
+          ) as HTMLElement;
+          if (anchor) {
+            const meta = anchor.getAttribute("data-pagefind-meta");
+            const match = meta?.match(/id:([^,]+)/);
+            if (match && matchingIds.has(match[1])) {
+              item.style.display = "";
+              item.removeAttribute("data-search-hidden");
+              matchCount++;
+            } else {
+              item.style.display = "none";
+              item.setAttribute("data-search-hidden", "true");
+            }
+          }
+        });
+
+        status.textContent = `Found ${matchCount} result${matchCount !== 1 ? "s" : ""}`;
+        status.classList.remove("hidden");
+
+        // Dispatch event for pagination to update
+        container.dispatchEvent(
+          new CustomEvent("search-updated", { detail: { matchCount } }),
+        );
+      }
+
+      input.addEventListener("input", () => {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+          performSearch(input.value);
+        }, 50);
+      });
+
+      clearBtn.addEventListener("click", () => {
+        input.value = "";
+        performSearch("");
+        input.focus();
+      });
+
+      // Handle escape key
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && input.value) {
+          input.value = "";
+          performSearch("");
+        }
+      });
+
+      // Preload pagefind on focus
+      input.addEventListener(
+        "focus",
+        () => {
+          loadPagefind();
+        },
+        { once: true },
+      );
+    });
+  }
+
+  // Initialize on page load and after view transitions
+  initSearchFilters();
+  document.addEventListener("astro:after-swap", initSearchFilters);
+</script>

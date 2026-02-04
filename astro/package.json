@@ -12,6 +12,7 @@
     "@astrojs/tailwind": "^6.0.2",
     "@tailwindcss/typography": "^0.5.19",
     "astro": "^5.17.1",
+    "astro-pagefind": "^1.8.5",
     "better-sqlite3": "^12.6.2"
   },
   "devDependencies": {

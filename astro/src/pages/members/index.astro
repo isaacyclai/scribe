@@ -2,6 +2,7 @@
 import Layout from '../../layouts/Layout.astro';
 import SectionLabel from '../../components/SectionLabel.astro';
 import MemberCard from '../../components/MemberCard.astro';
+import SearchFilter from '../../components/SearchFilter.astro';
 import { getMembersWithInfo, getMemberCount } from '../../lib/db';
 
 const members = getMembersWithInfo();
@@ -19,6 +20,13 @@ const totalCount = getMemberCount();
   <p class="font-body text-base text-ink-soft leading-relaxed max-w-[58ch] mb-8">
     Browse Members of Parliament, see their activity in the House, and explore the questions, motions, and bills they've been involved in.
   </p>
+
+  <SearchFilter 
+    containerId="members-list"
+    itemSelector=".member-item"
+    contentType="member"
+    placeholder="Search by name, constituency, or designation..."
+  />
 
   <p class="font-sans text-sm text-ink-muted mb-6">
     Showing {members.length} of {totalCount} members

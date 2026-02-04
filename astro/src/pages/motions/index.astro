@@ -2,6 +2,7 @@
 import Layout from '../../layouts/Layout.astro';
 import SectionLabel from '../../components/SectionLabel.astro';
 import QuestionCard from '../../components/QuestionCard.astro';
+import SearchFilter from '../../components/SearchFilter.astro';
 import Pagination from '../../components/Pagination.astro';
 import { getMotions, getMotionCount } from '../../lib/db';
 
@@ -21,8 +22,15 @@ const totalCount = getMotionCount();
     Parliament for debate and decision. Click on a motion to see the full transcript.
   </p>
 
+  <SearchFilter 
+    containerId="motions-list"
+    itemSelector=".motion-item"
+    contentType="motion"
+    placeholder="Search motions by title, speaker, or content..."
+  />
+
   <p class="font-sans text-sm text-ink-muted mb-6">
-    Showing {motions.length} of {totalCount} motions
+    Showing <span id="motions-count">{motions.length}</span> of {totalCount} motions
   </p>
 
   <div id="motions-list" class="flex flex-col border-t border-border">

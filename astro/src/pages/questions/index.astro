@@ -2,15 +2,12 @@
 import Layout from "../../layouts/Layout.astro";
 import SectionLabel from "../../components/SectionLabel.astro";
 import QuestionCard from "../../components/QuestionCard.astro";
+import SearchFilter from "../../components/SearchFilter.astro";
+import Pagination from "../../components/Pagination.astro";
 import { getQuestions, getQuestionCount } from "../../lib/db";
 
-const PAGE_SIZE = 100;
-const currentPage = 1;
 const totalCount = getQuestionCount();
-const totalPages = Math.ceil(totalCount / PAGE_SIZE);
-const questions = getQuestions(PAGE_SIZE, (currentPage - 1) * PAGE_SIZE);
-const rangeStart = totalCount === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
-const rangeEnd = Math.min(currentPage * PAGE_SIZE, totalCount);
+const questions = getQuestions(totalCount, 0);
 ---
 
 <Layout
@@ -31,8 +28,15 @@ const rangeEnd = Math.min(currentPage * PAGE_SIZE, totalCount);
         question to see the full transcript.
     </p>
 
+    <SearchFilter 
+        containerId="questions-list"
+        itemSelector=".question-item"
+        contentType="question"
+        placeholder="Search questions by title, speaker, or content..."
+    />
+
     <p class="font-sans text-sm text-ink-muted mb-6">
-        Showing {rangeStart}-{rangeEnd} of {totalCount} questions
+        Showing <span id="questions-count">{totalCount}</span> questions
     </p>
 
     <div id="questions-list" class="flex flex-col border-t border-border">
@@ -45,7 +49,7 @@ const rangeEnd = Math.min(currentPage * PAGE_SIZE, totalCount);
                 questions.map((question, i) => (
                     <div
                         class="question-item animate-fade-up"
-                        style={`animation-delay: ${0.1 + i * 0.03}s`}
+                        style={`animation-delay: ${0.1 + Math.min(i, 20) * 0.03}s`}
                     >
                         <QuestionCard section={question} />
                     </div>
@@ -54,93 +58,5 @@ const rangeEnd = Math.min(currentPage * PAGE_SIZE, totalCount);
         }
     </div>
 
-    {
-        totalPages > 1 && (
-            <nav
-                class="flex items-center justify-center gap-4 py-6"
-                aria-label="Questions pagination"
-            >
-                {currentPage > 1 ? (
-                    <a
-                        class="flex items-center gap-1.5 rounded-lg border border-border bg-surface px-4 py-2 font-ui text-sm text-ink/70 transition-all hover:border-accent/30 hover:text-accent"
-                        href={`/questions/page/${currentPage - 1}`}
-                    >
-                        <svg
-                            class="h-4 w-4"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="1.5"
-                                d="M15 19l-7-7 7-7"
-                            />
-                        </svg>
-                        Previous
-                    </a>
-                ) : (
-                    <span class="flex items-center gap-1.5 rounded-lg border border-border bg-surface px-4 py-2 font-ui text-sm text-ink/70 opacity-40">
-                        <svg
-                            class="h-4 w-4"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="1.5"
-                                d="M15 19l-7-7 7-7"
-                            />
-                        </svg>
-                        Previous
-                    </span>
-                )}
-                <span class="font-ui text-sm text-ink/50">
-                    Page <span class="font-medium text-ink">{currentPage}</span>{" "}
-                    of <span class="font-medium text-ink">{totalPages}</span>
-                </span>
-                {currentPage < totalPages ? (
-                    <a
-                        class="flex items-center gap-1.5 rounded-lg border border-border bg-surface px-4 py-2 font-ui text-sm text-ink/70 transition-all hover:border-accent/30 hover:text-accent"
-                        href={`/questions/page/${currentPage + 1}`}
-                    >
-                        Next
-                        <svg
-                            class="h-4 w-4"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="1.5"
-                                d="M9 5l7 7-7 7"
-                            />
-                        </svg>
-                    </a>
-                ) : (
-                    <span class="flex items-center gap-1.5 rounded-lg border border-border bg-surface px-4 py-2 font-ui text-sm text-ink/70 opacity-40">
-                        Next
-                        <svg
-                            class="h-4 w-4"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="1.5"
-                                d="M9 5l7 7-7 7"
-                            />
-                        </svg>
-                    </span>
-                )}
-            </nav>
-        )
-    }
+    <Pagination containerId="questions-list" itemSelector=".question-item" itemsPerPage={50} />
 </Layout>

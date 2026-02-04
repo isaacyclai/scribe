@@ -2,6 +2,7 @@
 import Layout from '../../layouts/Layout.astro';
 import SectionLabel from '../../components/SectionLabel.astro';
 import SessionCard from '../../components/SessionCard.astro';
+import SearchFilter from '../../components/SearchFilter.astro';
 import Pagination from '../../components/Pagination.astro';
 import { getSessions, getSessionCount } from '../../lib/db';
 
@@ -30,8 +31,15 @@ const totalCount = getSessionCount();
     <a href="https://www.youtube.com/@SingaporeMDDI/streams" class="text-accent hover:text-accent-light no-underline" target="_blank" rel="noopener noreferrer">MDDI youtube channel</a>.
   </p>
 
+  <SearchFilter 
+    containerId="sessions-list"
+    itemSelector=".session-item"
+    contentType="session"
+    placeholder="Search by date (e.g. January 2024)..."
+  />
+
   <p class="font-sans text-sm text-ink-muted mb-4">
-    Showing {sessions.length} of {totalCount} sittings
+    Showing <span id="sessions-count">{sessions.length}</span> of {totalCount} sittings
   </p>
 
   <div id="sessions-list" class="flex flex-col border-t border-border">

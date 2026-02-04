@@ -2,6 +2,7 @@
 import Layout from "../../layouts/Layout.astro";
 import SectionLabel from "../../components/SectionLabel.astro";
 import BillCard from "../../components/BillCard.astro";
+import SearchFilter from "../../components/SearchFilter.astro";
 import Pagination from "../../components/Pagination.astro";
 import { getBills, getBillCount } from "../../lib/db";
 
@@ -23,8 +24,15 @@ const totalCount = getBillCount();
         Parliament. Track their progress from first reading through to passage.
     </p>
 
+    <SearchFilter 
+        containerId="bills-list"
+        itemSelector=".bill-item"
+        contentType="bill"
+        placeholder="Search bills by title or ministry..."
+    />
+
     <p class="font-sans text-sm text-ink-muted mb-6">
-        Showing {bills.length} of {totalCount} bills
+        Showing <span id="bills-count">{bills.length}</span> of {totalCount} bills
     </p>
 
     <div id="bills-list" class="flex flex-col border-t border-border">

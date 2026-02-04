@@ -71,17 +71,16 @@ const { containerId, itemSelector, itemsPerPage = 20 } = Astro.props;
                 const container = document.getElementById(containerId!);
                 if (!container) return;
 
-                const items = container.querySelectorAll(selector!);
-                const totalPages = Math.ceil(items.length / perPage);
+                const allItems = Array.from(container.querySelectorAll(selector!)) as HTMLElement[];
                 let currentPage = 1;
+                let isSearchActive = false;
 
                 // Remove animation classes after initial load to prevent re-animation on page change
                 // Wait for animations to complete (longest delay + animation duration)
                 setTimeout(() => {
-                    items.forEach((item) => {
-                        const element = item as HTMLElement;
-                        element.classList.remove('animate-fade-up', 'animate-fade-in', 'animate-slide-down');
-                        element.style.animationDelay = '';
+                    allItems.forEach((item) => {
+                        item.classList.remove('animate-fade-up', 'animate-fade-in', 'animate-slide-down');
+                        item.style.animationDelay = '';
                     });
                 }, 1000); // Allow time for staggered animations to complete
 
@@ -113,42 +112,89 @@ const { containerId, itemSelector, itemsPerPage = 20 } = Astro.props;
                     nextBtn = newNextBtn;
                 }
 
+                function getVisibleItems(): HTMLElement[] {
+                    if (isSearchActive) {
+                        // Only include items not hidden by search
+                        return allItems.filter(item => !item.hasAttribute('data-search-hidden'));
+                    }
+                    return allItems;
+                }
+
                 function updateDisplay() {
-                    items.forEach((item, index) => {
-                        const element = item as HTMLElement;
-                        const start = (currentPage - 1) * perPage;
-                        const end = start + perPage;
-                        element.style.display =
-                            index >= start && index < end ? "" : "none";
+                    const visibleItems = getVisibleItems();
+                    const totalPages = Math.ceil(visibleItems.length / perPage);
+                    
+                    // Ensure current page is valid
+                    if (currentPage > totalPages) {
+                        currentPage = Math.max(1, totalPages);
+                    }
+
+                    // Hide all items first
+                    allItems.forEach((item) => {
+                        item.style.display = 'none';
+                    });
+
+                    // Show items for current page (only from visible items)
+                    const start = (currentPage - 1) * perPage;
+                    const end = start + perPage;
+                    visibleItems.forEach((item, index) => {
+                        if (index >= start && index < end) {
+                            item.style.display = '';
+                        }
                     });
 
                     if (currentSpan)
                         currentSpan.textContent = String(currentPage);
-                    if (totalSpan) totalSpan.textContent = String(totalPages);
+                    if (totalSpan) totalSpan.textContent = String(totalPages || 1);
 
                     prevBtn.disabled = currentPage === 1;
                     nextBtn.disabled =
                         currentPage === totalPages || totalPages === 0;
+                    
+                    // Hide pagination if only one page or no items
+                    if (totalPages <= 1) {
+                        (controls as HTMLElement).style.display = "none";
+                    } else {
+                        (controls as HTMLElement).style.display = "";
+                    }
                 }
 
                 prevBtn?.addEventListener("click", () => {
                     if (currentPage > 1) {
                         currentPage--;
                         updateDisplay();
+                        container.scrollIntoView({
+                            behavior: "smooth",
+                            block: "start",
+                        });
                     }
                 });
 
                 nextBtn?.addEventListener("click", () => {
+                    const visibleItems = getVisibleItems();
+                    const totalPages = Math.ceil(visibleItems.length / perPage);
                     if (currentPage < totalPages) {
                         currentPage++;
                         updateDisplay();
+                        container.scrollIntoView({
+                            behavior: "smooth",
+                            block: "start",
+                        });
                     }
                 });
 
-                // Hide pagination if only one page
-                if (totalPages <= 1) {
-                    (controls as HTMLElement).style.display = "none";
-                }
+                // Listen for search events from SearchFilter component
+                container.addEventListener('search-updated', () => {
+                    isSearchActive = true;
+                    currentPage = 1;
+                    updateDisplay();
+                });
+
+                container.addEventListener('search-cleared', () => {
+                    isSearchActive = false;
+                    currentPage = 1;
+                    updateDisplay();
+                });
 
                 updateDisplay();
             });
