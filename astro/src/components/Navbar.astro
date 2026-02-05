@@ -1,5 +1,8 @@
 ---
-const pathname = Astro.url.pathname;
+const rawPathname = Astro.url.pathname;
+const pathname = rawPathname
+    .replace(/\/index\.html$/, "")
+    .replace(/\.html$/, "");
 
 const navLinks = [
     { href: "/sessions", label: "Sittings" },
