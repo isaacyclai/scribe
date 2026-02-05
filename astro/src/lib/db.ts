@@ -890,17 +890,30 @@ export interface RecentBillReading {
 export function getRecentBillReadings(limit: number = 5): RecentBillReading[] {
   const sql = `
     SELECT
-      b.id as billId,
-      b.title as billTitle,
-      sec.section_type as sectionType,
-      s.date as sessionDate,
-      m.name as ministry
-    FROM sections sec
-    JOIN sessions s ON sec.session_id = s.id
-    JOIN bills b ON sec.bill_id = b.id
-    LEFT JOIN ministries m ON b.ministry_id = m.id
-    WHERE sec.bill_id IS NOT NULL
-    ORDER BY s.date DESC, sec.section_order DESC
+      billId,
+      billTitle,
+      sectionType,
+      sessionDate,
+      ministry
+    FROM (
+      SELECT
+        b.id as billId,
+        b.title as billTitle,
+        sec.section_type as sectionType,
+        s.date as sessionDate,
+        m.name as ministry,
+        ROW_NUMBER() OVER (
+          PARTITION BY b.id
+          ORDER BY s.date DESC, sec.section_order DESC
+        ) as rowNumber
+      FROM sections sec
+      JOIN sessions s ON sec.session_id = s.id
+      JOIN bills b ON sec.bill_id = b.id
+      LEFT JOIN ministries m ON b.ministry_id = m.id
+      WHERE sec.bill_id IS NOT NULL
+    )
+    WHERE rowNumber = 1
+    ORDER BY sessionDate DESC
     LIMIT ?
   `;
   return db.prepare(sql).all(limit) as RecentBillReading[];
