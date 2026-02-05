@@ -128,7 +128,8 @@ export default function PaginatedList({
   // Perform search
   const performSearch = useCallback(
     async (searchQuery: string) => {
-      if (!searchQuery.trim()) {
+      const trimmedQuery = searchQuery.trim();
+      if (!trimmedQuery || trimmedQuery.length <= 2) {
         setIsSearchMode(false);
         setSearchResults([]);
         setPage(1);
@@ -166,7 +167,7 @@ export default function PaginatedList({
       }
 
       // Use Pagefind for search
-      const results = await pf.search(searchQuery, {
+      const results = await pf.search(trimmedQuery, {
         filters: { type: contentType },
       });
 
@@ -192,7 +193,7 @@ export default function PaginatedList({
       setIsSearchMode(true);
       setSearchResults(matched);
       setPage(1);
-      updateUrlParams(1, searchQuery);
+      updateUrlParams(1, trimmedQuery);
       setIsLoading(false);
     },
     [contentType, fetchAllData, initialItems, loadPagefind, updateUrlParams],
