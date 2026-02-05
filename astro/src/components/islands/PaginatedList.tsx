@@ -25,7 +25,7 @@ interface PagefindSearch {
 interface Pagefind {
   search: (
     query: string,
-    options?: { filters?: Record<string, string> }
+    options?: { filters?: Record<string, string> },
   ) => Promise<PagefindSearch>;
 }
 
@@ -84,7 +84,9 @@ export default function PaginatedList({
     try {
       const base = (import.meta as any).env?.BASE_URL || "/";
       const pagefindPath = `${base}pagefind/pagefind.js`.replace(/\/+/g, "/");
-      pagefindRef.current = (await import(/* @vite-ignore */ pagefindPath)) as Pagefind;
+      pagefindRef.current = (await import(
+        /* @vite-ignore */ pagefindPath
+      )) as Pagefind;
       return pagefindRef.current;
     } catch {
       console.warn("Pagefind not available - search will be disabled.");
@@ -192,7 +194,7 @@ export default function PaginatedList({
       updateUrlParams(1, searchQuery);
       setIsLoading(false);
     },
-    [contentType, fetchAllData, initialItems, loadPagefind, updateUrlParams]
+    [contentType, fetchAllData, initialItems, loadPagefind, updateUrlParams],
   );
 
   // Load page data for browse mode
@@ -210,7 +212,7 @@ export default function PaginatedList({
       setItems(pageItems);
       setIsLoading(false);
     },
-    [fetchAllData, initialItems, pageSize]
+    [fetchAllData, initialItems, pageSize],
   );
 
   // Handle page change
@@ -224,10 +226,8 @@ export default function PaginatedList({
       } else {
         updateUrlParams(newPage, query);
       }
-      // Scroll to top of list
-      window.scrollTo({ top: 0, behavior: "smooth" });
     },
-    [currentTotalPages, isSearchMode, loadPage, query, updateUrlParams]
+    [currentTotalPages, isSearchMode, loadPage, query, updateUrlParams],
   );
 
   // Handle search input
@@ -244,7 +244,7 @@ export default function PaginatedList({
         performSearch(value);
       }, 150);
     },
-    [performSearch]
+    [performSearch],
   );
 
   // Handle clear
@@ -262,7 +262,7 @@ export default function PaginatedList({
         performSearch("");
       }
     },
-    [performSearch, query]
+    [performSearch, query],
   );
 
   // Initialize from URL params
@@ -298,7 +298,8 @@ export default function PaginatedList({
         setIsSearchMode(false);
         setSearchResults([]);
         const pageNum = pageParam ? parseInt(pageParam, 10) : 1;
-        const validPage = Number.isFinite(pageNum) && pageNum >= 1 ? pageNum : 1;
+        const validPage =
+          Number.isFinite(pageNum) && pageNum >= 1 ? pageNum : 1;
         setPage(validPage);
         loadPage(validPage);
       }
