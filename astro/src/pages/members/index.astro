@@ -39,10 +39,20 @@ const totalCount = getMemberCount();
     </p>
   </div>
 
-  <!-- <iframe
-    title="2025 General Election Results Map"
-    src="https://elections.data.gov.sg/en/map?isScrollable=true&primaryColor=%236253E8&view=Winning%20margin&lang=en&year=2025&constituenciesView=all"
-    class:list="h-[1040px] w-full border-none md:h-[642px]"></iframe> -->
+  <div class="mb-10">
+    <p
+      class="font-body text-base text-ink-soft leading-relaxed max-w-[72ch] mb-4 text-pretty"
+    >
+      Don't know who your MP is? Enter your postal code in the map below to find
+      out.
+    </p>
+    <div class="w-full overflow-hidden">
+      <iframe
+        title="2025 General Election Results Map"
+        src="https://elections.data.gov.sg/en/map?isScrollable=true&primaryColor=%236253E8&view=Winning%20margin&lang=en&year=2025&constituenciesView=all"
+        class="h-[980px] w-full border-none sm:h-[740px] md:h-[620px]"></iframe>
+    </div>
+  </div>
 
   <SearchFilter
     containerId="members-list"
