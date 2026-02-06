@@ -966,13 +966,24 @@ export function getLatestQuestion(): LatestQuestion | undefined {
   };
 }
 
-// Get count of new bills in recent period (e.g., last 30 days)
-export function getRecentBillCount(days: number = 30): number {
-  const result = db.prepare(`
-    SELECT COUNT(*) as count FROM bills
-    WHERE first_reading_date >= date('now', '-' || ? || ' days')
-  `).get(days) as { count: number };
-  return result.count;
+// Get bill readings from the most recent sitting
+export function getBillReadingsFromLastSitting(): RecentBillReading[] {
+  const sql = `
+    SELECT DISTINCT
+      b.id as billId,
+      b.title as billTitle,
+      sec.section_type as sectionType,
+      s.date as sessionDate,
+      m.name as ministry
+    FROM sections sec
+    JOIN sessions s ON sec.session_id = s.id
+    JOIN bills b ON sec.bill_id = b.id
+    LEFT JOIN ministries m ON b.ministry_id = m.id
+    WHERE sec.bill_id IS NOT NULL
+      AND s.date = (SELECT MAX(date) FROM sessions)
+    ORDER BY sec.section_order ASC
+  `;
+  return db.prepare(sql).all() as RecentBillReading[];
 }
 
 // Get recent motions for ticker

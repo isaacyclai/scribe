@@ -5,6 +5,7 @@ import {
   getLatestSession,
   getSittingsThisYear,
   getRecentBillReadings,
+  getBillReadingsFromLastSitting,
   getLatestQuestion,
   getRecentMotions,
   getQuestionCount,
@@ -15,6 +16,7 @@ const stats = getStats();
 const latestSession = getLatestSession();
 const sittingsThisYear = getSittingsThisYear();
 const recentBillReadings = getRecentBillReadings(3);
+const billReadingsFromLastSitting = getBillReadingsFromLastSitting();
 const latestQuestion = getLatestQuestion();
 const recentMotions = getRecentMotions(2);
 const questionCount = getQuestionCount();
@@ -47,8 +49,8 @@ const ordinal = (n: number) => {
   return n + (s[(v - 20) % 10] || s[v] || s[0]);
 };
 
-// Count recent bills (ones with readings in last 30 days)
-const recentBillCount = recentBillReadings.length;
+// Count bills from the most recent sitting
+const recentBillCount = billReadingsFromLastSitting.length;
 
 // Get reading type label
 const getReadingLabel = (sectionType: string) => {
