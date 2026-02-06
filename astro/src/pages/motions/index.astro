@@ -27,13 +27,20 @@ const initialItems: ListItem[] = motions.map((m) => ({
 
   <h1 class="font-display text-display-lg text-ink mb-4">Motions</h1>
 
-  <p
-    class="font-body text-base text-ink-soft leading-relaxed max-w-[58ch] mb-8"
+  <div
+    class="font-body text-base text-ink-soft leading-relaxed max-w-[72ch] mb-8 space-y-3"
   >
-    Browse parliamentary motions and adjournment motions. Motions are formal
-    proposals put before Parliament for debate and decision. Click on a motion
-    to see the full transcript.
-  </p>
+    <p>
+      Motions are formal proposals put before Parliament for debate and
+      decision, including adjournment motions and ministerial statements. There
+      is typically one adjournment motion at the end of each sitting, which can
+      be moved by any MP.
+    </p>
+    <p>
+      Note that some very short motions (such as ones to ask for an extension of
+      time) may not be included in this list.
+    </p>
+  </div>
 
   <PaginatedList
     client:visible

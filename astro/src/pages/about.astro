@@ -19,11 +19,23 @@ import SectionLabel from "../components/SectionLabel.astro";
       <SectionLabel>What is Scribe?</SectionLabel>
       <div class="mt-4 space-y-4">
         <p class="font-body text-ink/80 leading-relaxed">
-          Scribe is a project to make Singapore Parliament proceedings more
-          accessible and searchable. It processes the official Hansard records
-          and presents them in a user-friendly format, making it easier to
-          explore parliamentary questions, bills, motions, and member
-          activities.
+          Scribe was born out of a desire to make it easier for the general
+          public to keep up with what's happening in Singapore's Parliament.
+          Despite the Hansard being publicly available, the format of the
+          official reports can be rather unwieldy for sifting through, and it
+          is our hope that this site will provide a cleaner, more modern
+          interface to access the information they contain.
+        </p>
+        <p class="font-body text-ink/80 leading-relaxed">
+          Scribe is an independent project and is not affiliated with the
+          Singapore Government in any way. It is open sourced under the MIT
+          license, and the code is available on <a
+            href="https://github.com/isaacyclai/scribe"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-accent hover:underline">GitHub</a
+          >. If you have any feedback, suggestions, or bug reports, please
+          feel free to open an issue on the GitHub repository.
         </p>
       </div>
     </section>
@@ -76,6 +88,37 @@ import SectionLabel from "../components/SectionLabel.astro";
             indicator and should be verified against official records.
           </p>
         </div>
+      </div>
+    </section>
+
+    <!-- Acknowledgements -->
+    <section class="mb-12">
+      <SectionLabel>Acknowledgements</SectionLabel>
+      <div class="mt-4 space-y-4">
+        <p class="font-body text-ink/80 leading-relaxed">
+          All data on parliamentary proceedings is sourced from the official
+          Hansard, whose copyright is owned by the Singapore Government.
+          Additional information about the structure of Parliament is sourced
+          from the official <a
+            href="https://www.parliament.gov.sg/"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-accent hover:underline">Parliament of Singapore website</a
+          >.
+        </p>
+        <p class="font-body text-ink/80 leading-relaxed">
+          This project is inspired by <a
+            href="https://telescope.sg"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-accent hover:underline">Telescope</a
+          > and <a
+            href="https://pair.gov.sg"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-accent hover:underline">Pair Search</a
+          >.
+        </p>
       </div>
     </section>
 

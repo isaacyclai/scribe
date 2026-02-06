@@ -1,55 +1,79 @@
 ---
-import Layout from '../../layouts/Layout.astro';
-import SectionLabel from '../../components/SectionLabel.astro';
-import MemberCard from '../../components/MemberCard.astro';
-import SearchFilter from '../../components/SearchFilter.astro';
-import { getMembersWithInfo, getMemberCount } from '../../lib/db';
+import Layout from "../../layouts/Layout.astro";
+import SectionLabel from "../../components/SectionLabel.astro";
+import MemberCard from "../../components/MemberCard.astro";
+import SearchFilter from "../../components/SearchFilter.astro";
+import { getMembersWithInfo, getMemberCount } from "../../lib/db";
 
 const members = getMembersWithInfo();
 const STAGGER_LIMIT = 12;
 const totalCount = getMemberCount();
 ---
 
-<Layout title="Members of Parliament" description="Browse Singapore Members of Parliament">
+<Layout
+  title="Members of Parliament"
+  description="Browse Singapore Members of Parliament"
+>
   <SectionLabel>Members of Parliament</SectionLabel>
-  
+
   <h1 class="font-display text-display-lg text-ink mb-4">
     Your Representatives
   </h1>
-  
-  <p class="font-body text-base text-ink-soft leading-relaxed max-w-[58ch] mb-8">
-    Browse Members of Parliament, see their activity in the House, and explore the questions, motions, and bills they've been involved in.
-  </p>
 
-  <SearchFilter 
+  <div
+    class="font-body text-base text-ink-soft leading-relaxed max-w-[72ch] mb-8 space-y-3"
+  >
+    <p>
+      Browse Members of Parliament, see their activity in the House, and explore
+      the questions, motions, and bills they've been involved in. Individual MP
+      pages also include AI-generated summaries of their recent contributions.
+    </p>
+    <p>
+      In Singapore, there are three types of MPs: <strong class="text-ink"
+        >elected members</strong
+      > who represent geographical constituencies, <strong class="text-ink"
+        >Non-Constituency Members (NCMPs)</strong
+      > from opposition parties who received the highest vote share among unelected
+      candidates, and <strong class="text-ink">Nominated Members (NMPs)</strong> appointed
+      by the President to provide non-partisan views.
+    </p>
+  </div>
+
+  <SearchFilter
     containerId="members-list"
     itemSelector=".member-item"
     contentType="member"
     placeholder="Search by name, constituency, or designation..."
   />
 
-  <p class="font-sans text-sm text-ink-muted mb-6" data-search-count="members-list">
+  <p
+    class="font-sans text-sm text-ink-muted mb-6"
+    data-search-count="members-list"
+  >
     Showing {members.length} of {totalCount} members
   </p>
 
   <div id="members-list" class="grid gap-4 sm:grid-cols-2">
-    {members.length === 0 ? (
-      <p class="col-span-full py-12 text-center font-body text-ink-muted">
-        No members found
-      </p>
-    ) : (
-      members.map((member, i) => {
-        const isStaggered = i < STAGGER_LIMIT;
-        return (
-          <div
-            class={`member-item h-full${isStaggered ? ' animate-fade-up' : ''}`}
-            style={isStaggered ? `animation-delay: ${0.1 + i * 0.03}s` : undefined}
-          >
-            <MemberCard member={member} />
-          </div>
-        );
-      })
-    )}
+    {
+      members.length === 0 ? (
+        <p class="col-span-full py-12 text-center font-body text-ink-muted">
+          No members found
+        </p>
+      ) : (
+        members.map((member, i) => {
+          const isStaggered = i < STAGGER_LIMIT;
+          return (
+            <div
+              class={`member-item h-full${isStaggered ? " animate-fade-up" : ""}`}
+              style={
+                isStaggered ? `animation-delay: ${0.1 + i * 0.03}s` : undefined
+              }
+            >
+              <MemberCard member={member} />
+            </div>
+          );
+        })
+      )
+    }
   </div>
-
 </Layout>

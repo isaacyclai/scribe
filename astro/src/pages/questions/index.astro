@@ -32,13 +32,23 @@ const initialItems: ListItem[] = questions.map((q) => ({
     Parliamentary Questions
   </h1>
 
-  <p
-    class="font-body text-base text-ink-soft leading-relaxed max-w-[58ch] mb-8"
+  <div
+    class="font-body text-base text-ink-soft leading-relaxed max-w-[72ch] mb-8 space-y-3"
   >
-    Browse parliamentary questions and their answers. Questions can be oral
-    (OA), written (WA), or written without answer (WANA). Click on a question to
-    see the full transcript.
-  </p>
+    <p>
+      Parliamentary questions (PQs) are formal inquiries made by MPs to
+      Ministers. Each MP can file up to five PQs per sitting&mdash;three oral
+      and two written. After the initial answer, supplementary questions may be
+      asked by any MP.
+    </p>
+    <p>
+      <strong class="text-ink">Oral questions</strong> are answered during question
+      time, the first 90 minutes of each sitting. Unanswered oral questions receive
+      written answers instead. <strong class="text-ink"
+        >Written questions</strong
+      > are answered outside of question time.
+    </p>
+  </div>
 
   <PaginatedList
     client:visible

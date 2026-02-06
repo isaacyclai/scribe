@@ -25,12 +25,20 @@ const initialItems: ListItem[] = bills.map((b) => ({
     Bills Before Parliament
   </h1>
 
-  <p
-    class="font-body text-base text-ink-soft leading-relaxed max-w-[58ch] mb-8"
+  <div
+    class="font-body text-base text-ink-soft leading-relaxed max-w-[72ch] mb-8 space-y-3"
   >
-    Bills are proposed laws that are debated, amended, and voted on in
-    Parliament. Track their progress from first reading through to passage.
-  </p>
+    <p>
+      Bills are proposed laws introduced by a Minister on behalf of the
+      Government, though MPs can also introduce Private Member's Bills. Track
+      their progress from first reading through to passage.
+    </p>
+    <p>
+      In the second reading, the principles and merits of the bill are debated,
+      after which members vote. Bills amending the Constitution require a
+      supermajority (two-thirds); otherwise a simple majority suffices.
+    </p>
+  </div>
 
   <PaginatedList
     client:visible

@@ -1,39 +1,55 @@
 ---
-import Layout from '../../layouts/Layout.astro';
-import SectionLabel from '../../components/SectionLabel.astro';
-import MinistryCard from '../../components/MinistryCard.astro';
-import { getMinistries } from '../../lib/db';
+import Layout from "../../layouts/Layout.astro";
+import SectionLabel from "../../components/SectionLabel.astro";
+import MinistryCard from "../../components/MinistryCard.astro";
+import { getMinistries } from "../../lib/db";
 
 const ministries = getMinistries();
 ---
 
-<Layout title="Ministries" description="Browse Singapore government ministries and their parliamentary activities">
+<Layout
+  title="Ministries"
+  description="Browse Singapore government ministries and their parliamentary activities"
+>
   <SectionLabel>Government Departments</SectionLabel>
-  
-  <h1 class="font-display text-display-lg text-ink mb-4">
-    Ministries
-  </h1>
-  
-  <p class="font-body text-base text-ink-soft leading-relaxed max-w-[58ch] mb-8">
-    Browse government ministries and their involvement in parliamentary proceedings.
-    Click on a ministry to see related questions, bills, and motions.
-  </p>
+
+  <h1 class="font-display text-display-lg text-ink mb-4">Ministries</h1>
+
+  <div
+    class="font-body text-base text-ink-soft leading-relaxed max-w-[72ch] mb-8 space-y-3"
+  >
+    <p>
+      Browse government ministries and their involvement in parliamentary
+      proceedings. Ministries serve as a proxy for topics discussed in
+      Parliament.
+    </p>
+    <p>
+      Note that ministry affiliations are based on the identity of the Minister
+      who answers the question or introduces the bill, which may not be
+      completely precise in all cases.
+    </p>
+  </div>
 
   <p class="font-sans text-sm text-ink-muted mb-6">
     Showing {ministries.length} ministries
   </p>
 
   <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-    {ministries.length === 0 ? (
-      <p class="col-span-full py-12 text-center font-body text-ink-muted">
-        No ministries found
-      </p>
-    ) : (
-      ministries.map((ministry, i) => (
-        <div class="animate-fade-up" style={`animation-delay: ${0.1 + i * 0.03}s`}>
-          <MinistryCard ministry={ministry} />
-        </div>
-      ))
-    )}
+    {
+      ministries.length === 0 ? (
+        <p class="col-span-full py-12 text-center font-body text-ink-muted">
+          No ministries found
+        </p>
+      ) : (
+        ministries.map((ministry, i) => (
+          <div
+            class="animate-fade-up"
+            style={`animation-delay: ${0.1 + i * 0.03}s`}
+          >
+            <MinistryCard ministry={ministry} />
+          </div>
+        ))
+      )
+    }
   </div>
 </Layout>
