@@ -3,6 +3,7 @@ import Layout from "../../layouts/Layout.astro";
 import SectionLabel from "../../components/SectionLabel.astro";
 import AISummaryCard from "../../components/AISummaryCard.astro";
 import SpeakerPills from "../../components/SpeakerPills.astro";
+import BillTimeline from "../../components/BillTimeline.astro";
 import Tag from "../../components/Tag.astro";
 import { getBills, getBill, getBillSections } from "../../lib/db";
 import { slugify } from "../../lib/slugify";
@@ -37,8 +38,8 @@ const uniqueSpeakers = allSpeakers.filter(
     index === self.findIndex((s) => s && s.memberId === speaker.memberId),
 );
 
-// Group unique second reading timelines
-const secondReadingTimelines = secondReadings.reduce(
+// Group unique second reading sessions (for timeline + transcript headers)
+const secondReadingSessions = secondReadings.reduce(
   (acc, curr) => {
     if (!acc.find((item) => item.sessionDate === curr.sessionDate)) {
       acc.push({ sessionDate: curr.sessionDate, sessionId: curr.sessionId });
@@ -48,22 +49,12 @@ const secondReadingTimelines = secondReadings.reduce(
   [] as { sessionDate: string; sessionId: string }[],
 );
 
-const formatLongDate = (dateStr: string) => {
-  return new Date(dateStr).toLocaleDateString("en-SG", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-};
-
-// Determine bill status
+// Determine bill status from actual data
 const getStatus = (): {
   label: string;
   color: "green" | "accent" | "muted";
 } => {
-  if (bill.thirdReadingDate) return { label: "Passed", color: "green" };
-  if (bill.secondReadingDate)
+  if (secondReadings.length > 0)
     return { label: "Second Reading", color: "accent" };
   if (bill.firstReadingDate) return { label: "First Reading", color: "muted" };
   return { label: "Introduced", color: "muted" };
@@ -123,57 +114,13 @@ const status = getStatus();
     </div>
 
     <!-- Reading Timeline -->
-    <section
-      class="mb-8 bg-surface border border-border rounded-md p-6"
-      data-pagefind-ignore
-    >
-      <h2
-        class="font-sans text-xs uppercase tracking-wide text-ink-muted font-semibold mb-4"
-      >
-        Reading Timeline
-      </h2>
-      <div class="space-y-3">
-        {
-          bill.firstReadingDate && bill.firstReadingSessionId && (
-            <div class="flex items-center gap-3">
-              <Tag color="muted">First Reading</Tag>
-              <a
-                href={`/sessions/${slugify(bill.firstReadingDate, bill.firstReadingSessionId)}`}
-                class="font-sans text-sm text-ink-soft hover:text-accent no-underline"
-              >
-                {formatLongDate(bill.firstReadingDate)}
-              </a>
-            </div>
-          )
-        }
-        {
-          secondReadingTimelines.map((session, idx) => (
-            <div class="flex items-center gap-3">
-              <Tag color="accent">
-                Second Reading
-                {secondReadingTimelines.length > 1 ? ` (${idx + 1})` : ""}
-              </Tag>
-              <a
-                href={`/sessions/${slugify(session.sessionDate, session.sessionId)}`}
-                class="font-sans text-sm text-ink-soft hover:text-accent no-underline"
-              >
-                {formatLongDate(session.sessionDate)}
-              </a>
-            </div>
-          ))
-        }
-        {
-          bill.thirdReadingDate && (
-            <div class="flex items-center gap-3">
-              <Tag color="green">Third Reading</Tag>
-              <span class="font-sans text-sm text-ink-soft">
-                {formatLongDate(bill.thirdReadingDate)}
-              </span>
-            </div>
-          )
-        }
-      </div>
-    </section>
+    <div class="mb-8">
+      <BillTimeline
+        firstReadingDate={bill.firstReadingDate}
+        firstReadingSessionId={bill.firstReadingSessionId}
+        secondReadingSessions={secondReadingSessions}
+      />
+    </div>
 
     <!-- Speakers -->
     {
