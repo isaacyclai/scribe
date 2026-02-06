@@ -80,10 +80,15 @@ const status = getStatus();
     <!-- Header -->
     <header class="mb-8">
       <div class="flex flex-wrap items-center gap-2 mb-3" data-pagefind-ignore>
-        <Tag color={status.color}>{status.label}</Tag>
+        <div>
+          <Tag color={status.color}>{status.label}</Tag>
+        </div>
         {
           bill.ministry && bill.ministryId && (
-            <a href={`/ministries/${slugify(bill.ministry, bill.ministryId)}`} class="inline-block">
+            <a
+              href={`/ministries/${slugify(bill.ministry, bill.ministryId)}`}
+              class="inline-block"
+            >
               <Tag color="green">{bill.ministry}</Tag>
             </a>
           )
