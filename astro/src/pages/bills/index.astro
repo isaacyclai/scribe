@@ -1,0 +1,54 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import SectionLabel from "../../components/SectionLabel.astro";
+import PaginatedList from "../../components/islands/PaginatedList";
+import { getBills, getBillCount } from "../../lib/db";
+import type { ListItem } from "../../lib/types";
+
+const PAGE_SIZE = 24;
+const totalCount = getBillCount();
+const bills = getBills(PAGE_SIZE, 0);
+
+// Transform to match the ListItem interface
+const initialItems: ListItem[] = bills.map((b) => ({
+  id: b.id,
+  title: b.title,
+  date: b.firstReadingDate || undefined,
+  ministry: b.ministry || undefined,
+  firstReadingDate: b.firstReadingDate || undefined,
+  hasSecondReading: b.hasSecondReading || false,
+}));
+---
+
+<Layout title="Bills" description="Browse Singapore Parliament bills">
+  <SectionLabel>Legislation</SectionLabel>
+
+  <h1 class="font-display text-display-lg text-ink mb-4">
+    Bills Before Parliament
+  </h1>
+
+  <div
+    class="font-body text-base text-ink-soft leading-relaxed max-w-[72ch] mb-8 space-y-3 text-pretty"
+  >
+    <p>
+      Bills are proposed laws introduced by a Minister on behalf of the
+      Government, though MPs can also introduce Private Member's Bills. Track
+      their progress from first reading through to passage.
+    </p>
+    <p>
+      In the second reading, the principles and merits of the bill are debated,
+      after which members vote. Bills amending the Constitution require a
+      supermajority (two-thirds); otherwise a simple majority suffices.
+    </p>
+  </div>
+
+  <PaginatedList
+    client:visible
+    contentType="bill"
+    dataUrl="/data/bills.json"
+    totalCount={totalCount}
+    pageSize={PAGE_SIZE}
+    placeholder="Search bills by title or ministry..."
+    initialItems={initialItems}
+  />
+</Layout>

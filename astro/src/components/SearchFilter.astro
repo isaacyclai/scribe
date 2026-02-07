@@ -1,0 +1,367 @@
+---
+/**
+ * SearchFilter - Client-side search filter for smaller datasets
+ * Used by member/ministry pages that load all items and filter client-side.
+ * For larger paginated datasets, use PaginatedList instead.
+ */
+interface Props {
+  containerId: string;
+  itemSelector: string;
+  contentType: "member" | "question" | "bill" | "motion" | "session";
+  placeholder?: string;
+}
+
+const {
+  containerId,
+  itemSelector,
+  contentType,
+  placeholder = "Search...",
+} = Astro.props;
+---
+
+<div
+  class="search-filter-wrapper mb-6"
+  data-container={containerId}
+  data-selector={itemSelector}
+  data-type={contentType}
+>
+  <div class="relative">
+    <svg
+      class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-ink/40 pointer-events-none"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="1.5"
+        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+    </svg>
+    <input
+      type="text"
+      class="search-filter-input w-full rounded-lg border border-border bg-surface px-4 py-2.5 pl-10 pr-10 font-ui text-sm text-ink placeholder:text-ink/40 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/20 transition-colors"
+      placeholder={placeholder}
+      autocomplete="off"
+      spellcheck="false"
+    />
+    <button
+      type="button"
+      class="search-filter-clear absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-ink/40 hover:text-ink transition-colors hidden"
+      aria-label="Clear search"
+    >
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M6 18L18 6M6 6l12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <p class="search-filter-status mt-2 font-sans text-sm text-ink-muted hidden">
+  </p>
+</div>
+
+<script>
+  interface PagefindResult {
+    id: string;
+    data: () => Promise<{
+      meta?: { id?: string };
+      url: string;
+      excerpt: string;
+    }>;
+  }
+
+  interface PagefindSearch {
+    results: PagefindResult[];
+  }
+
+  interface Pagefind {
+    search: (
+      query: string,
+      options?: { filters?: Record<string, string> },
+    ) => Promise<PagefindSearch>;
+  }
+
+  let pagefind: Pagefind | null = null;
+
+  async function loadPagefind(): Promise<Pagefind | null> {
+    if (pagefind) return pagefind;
+    try {
+      // Use window location to build the path dynamically at runtime
+      const base = import.meta.env.BASE_URL || "/";
+      const pagefindPath = `${base}pagefind/pagefind.js`.replace(/\/+/g, "/");
+      pagefind = (await import(/* @vite-ignore */ pagefindPath)) as Pagefind;
+      return pagefind;
+    } catch (e) {
+      console.warn(
+        "Pagefind not available - using fallback text search. Run `bun run build` to generate the search index.",
+      );
+      return null;
+    }
+  }
+
+  function initSearchFilters() {
+    document.querySelectorAll(".search-filter-wrapper").forEach((wrapper) => {
+      const containerId = wrapper.getAttribute("data-container");
+      const selector = wrapper.getAttribute("data-selector");
+      const contentType = wrapper.getAttribute("data-type");
+
+      const safeContainer = document.getElementById(containerId!);
+      if (!safeContainer) return;
+
+      const input = wrapper.querySelector(
+        ".search-filter-input",
+      ) as HTMLInputElement;
+      const clearBtn = wrapper.querySelector(
+        ".search-filter-clear",
+      ) as HTMLButtonElement;
+      const status = wrapper.querySelector(
+        ".search-filter-status",
+      ) as HTMLElement;
+
+      if (!input) return;
+
+      // Check if already initialized
+      if (input.hasAttribute("data-search-initialized")) return;
+      input.setAttribute("data-search-initialized", "true");
+
+      const items = safeContainer.querySelectorAll(
+        selector!,
+      ) as NodeListOf<HTMLElement>;
+
+      // Build map for O(1) ID lookups and store original order for restoration
+      const itemById = new Map<string, HTMLElement>();
+      const originalOrder: HTMLElement[] = [];
+      items.forEach((item) => {
+        originalOrder.push(item);
+        const anchor = item.querySelector(
+          "a[data-pagefind-meta]",
+        ) as HTMLElement;
+        if (anchor) {
+          const meta = anchor.getAttribute("data-pagefind-meta");
+          const match = meta?.match(/id:([^,]+)/);
+          if (match) {
+            itemById.set(match[1], item);
+          }
+        }
+      });
+
+      // Reorder DOM elements based on relevance-ranked IDs
+      function reorderItems(orderedIds: string[]) {
+        const fragment = document.createDocumentFragment();
+        const reorderedSet = new Set<HTMLElement>();
+
+        // Add items in relevance order
+        for (const id of orderedIds) {
+          const item = itemById.get(id);
+          if (item) {
+            fragment.appendChild(item);
+            reorderedSet.add(item);
+          }
+        }
+
+        // Add remaining items (non-matches) at the end
+        for (const item of originalOrder) {
+          if (!reorderedSet.has(item)) {
+            fragment.appendChild(item);
+          }
+        }
+
+        safeContainer.appendChild(fragment);
+      }
+
+      // Restore original DOM order
+      function restoreOriginalOrder() {
+        const fragment = document.createDocumentFragment();
+        for (const item of originalOrder) {
+          fragment.appendChild(item);
+        }
+        safeContainer.appendChild(fragment);
+      }
+
+      function disableItemAnimations() {
+        items.forEach((item) => {
+          item.classList.remove(
+            "animate-fade-up",
+            "animate-fade-in",
+            "animate-slide-down",
+          );
+          item.style.animationDelay = "";
+        });
+      }
+
+      let debounceTimer: ReturnType<typeof setTimeout>;
+      let searchSeq = 0;
+
+      async function performSearch(query: string) {
+        const seq = ++searchSeq;
+        const pf = await loadPagefind();
+        if (seq !== searchSeq) return;
+
+        const countElements = containerId
+          ? (document.querySelectorAll(
+              `[data-search-count="${containerId}"]`,
+            ) as NodeListOf<HTMLElement>)
+          : ([] as unknown as NodeListOf<HTMLElement>);
+
+        if (!query.trim()) {
+          // Clear search - show all items and restore original order
+          restoreOriginalOrder();
+          items.forEach((item) => {
+            item.style.display = "";
+            item.removeAttribute("data-search-hidden");
+          });
+          status.classList.add("hidden");
+          clearBtn.classList.add("hidden");
+          countElements.forEach((element) =>
+            element.classList.remove("hidden"),
+          );
+
+          // Dispatch event for pagination to reset
+          safeContainer.dispatchEvent(
+            new CustomEvent("search-cleared", { detail: { reordered: true } }),
+          );
+          return;
+        }
+
+        clearBtn.classList.remove("hidden");
+        disableItemAnimations();
+
+        if (!pf) {
+          // Fallback: simple text matching when pagefind isn't available
+          // Score matches by position (earlier = more relevant)
+          const lowerQuery = query.toLowerCase();
+          const scored: { item: HTMLElement; score: number }[] = [];
+
+          items.forEach((item) => {
+            const text = item.textContent?.toLowerCase() || "";
+            const pos = text.indexOf(lowerQuery);
+            if (pos !== -1) {
+              item.removeAttribute("data-search-hidden");
+              scored.push({ item, score: pos });
+            } else {
+              item.style.display = "none";
+              item.setAttribute("data-search-hidden", "true");
+            }
+          });
+
+          // Sort by score (lower position = more relevant)
+          scored.sort((a, b) => a.score - b.score);
+
+          // Reorder DOM by relevance
+          const fragment = document.createDocumentFragment();
+          for (const { item } of scored) {
+            item.style.display = "";
+            fragment.appendChild(item);
+          }
+          // Append non-matches at end
+          items.forEach((item) => {
+            if (item.hasAttribute("data-search-hidden")) {
+              fragment.appendChild(item);
+            }
+          });
+          safeContainer.appendChild(fragment);
+
+          const matchCount = scored.length;
+          status.textContent = `Found ${matchCount} result${matchCount !== 1 ? "s" : ""}`;
+          status.classList.remove("hidden");
+          countElements.forEach((element) => element.classList.add("hidden"));
+          safeContainer.dispatchEvent(
+            new CustomEvent("search-updated", {
+              detail: { matchCount, reordered: true },
+            }),
+          );
+          return;
+        }
+
+        // Use pagefind with type filter
+        const results = await pf.search(query, {
+          filters: { type: contentType! },
+        });
+        if (seq !== searchSeq) return;
+
+        // Get matching IDs in relevance order (array preserves order)
+        const orderedIds: string[] = [];
+        for (const result of results.results) {
+          const data = await result.data();
+          if (data.meta?.id) {
+            orderedIds.push(data.meta.id);
+          }
+        }
+        if (seq !== searchSeq) return;
+
+        const matchingIds = new Set(orderedIds);
+
+        // Show/hide items based on matches
+        let matchCount = 0;
+        items.forEach((item) => {
+          const anchor = item.querySelector(
+            "a[data-pagefind-meta]",
+          ) as HTMLElement;
+          if (anchor) {
+            const meta = anchor.getAttribute("data-pagefind-meta");
+            const match = meta?.match(/id:([^,]+)/);
+            if (match && matchingIds.has(match[1])) {
+              item.style.display = "";
+              item.removeAttribute("data-search-hidden");
+              matchCount++;
+            } else {
+              item.style.display = "none";
+              item.setAttribute("data-search-hidden", "true");
+            }
+          }
+        });
+
+        // Reorder DOM by relevance
+        reorderItems(orderedIds);
+
+        status.textContent = `Found ${matchCount} result${matchCount !== 1 ? "s" : ""}`;
+        status.classList.remove("hidden");
+        countElements.forEach((element) => element.classList.add("hidden"));
+
+        // Dispatch event for pagination to update
+        safeContainer.dispatchEvent(
+          new CustomEvent("search-updated", {
+            detail: { matchCount, reordered: true },
+          }),
+        );
+      }
+
+      input.addEventListener("input", () => {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+          performSearch(input.value);
+        }, 50);
+      });
+
+      clearBtn.addEventListener("click", () => {
+        input.value = "";
+        performSearch("");
+        input.focus();
+      });
+
+      // Handle escape key
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && input.value) {
+          input.value = "";
+          performSearch("");
+        }
+      });
+
+      // Preload pagefind on focus
+      input.addEventListener(
+        "focus",
+        () => {
+          loadPagefind();
+        },
+        { once: true },
+      );
+    });
+  }
+
+  // Initialize on page load and after view transitions
+  initSearchFilters();
+  document.addEventListener("astro:after-swap", initSearchFilters);
+</script>

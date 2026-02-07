@@ -1,0 +1,236 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import SectionLabel from '../../components/SectionLabel.astro';
+import SectionCard from '../../components/SectionCard.astro';
+import Tag from '../../components/Tag.astro';
+import { getSessions, getSession, getSessionSections, getSessionAttendees, getSessionBills } from '../../lib/db';
+import { slugify } from '../../lib/slugify';
+
+export async function getStaticPaths() {
+  const sessions = getSessions();
+  return sessions.map((session) => ({
+    params: { slug: slugify(session.date, session.id) },
+    props: { id: session.id },
+  }));
+}
+
+const { id } = Astro.props;
+const session = getSession(id);
+
+if (!session) {
+  return Astro.redirect('/sessions');
+}
+
+const sections = getSessionSections(id);
+const attendees = getSessionAttendees(id);
+const bills = getSessionBills(id);
+
+// Helper to format ordinal numbers (1st, 2nd, 3rd, etc.)
+function getOrdinal(n: number): string {
+  const s = ['th', 'st', 'nd', 'rd'];
+  const v = n % 100;
+  return n + (s[(v - 20) % 10] || s[v] || s[0]);
+}
+
+const formattedDate = new Date(session.date).toLocaleDateString('en-SG', {
+  weekday: 'long',
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+});
+
+// Filter sections by type
+const questions = sections.filter(s => ['OA', 'WA', 'WANA'].includes(s.sectionType));
+const statements = sections.filter(s => ['OS', 'WS'].includes(s.sectionType) || s.category === 'motion' || s.category === 'clarification');
+
+const motions = statements.filter(s => s.category !== 'clarification');
+const clarifications = statements.filter(s => s.category === 'clarification');
+
+const oralAnswers = questions.filter(q => q.sectionType === 'OA');
+const writtenAnswers = questions.filter(q => ['WA', 'WANA'].includes(q.sectionType));
+
+const presentMembers = attendees.filter(a => a.present);
+const absentMembers = attendees.filter(a => !a.present);
+---
+
+<Layout title={formattedDate} description={`Parliament sitting on ${formattedDate}`}>
+  <a href="/sessions" class="inline-flex items-center font-sans text-sm text-accent hover:text-accent-light no-underline mb-6">
+    ← Back to Sittings
+  </a>
+
+  <header class="mb-10">
+    <SectionLabel>{getOrdinal(session.parliament)} Parliament · {getOrdinal(session.sessionNo)} Session</SectionLabel>
+    
+    <h1 class="font-display text-display-lg text-ink mb-3">
+      {formattedDate}
+    </h1>
+    
+    <div class="flex flex-wrap gap-3 font-sans text-sm text-ink-muted">
+      <span>{getOrdinal(session.sittingNo)} Sitting</span>
+      {session.url && (
+        <>
+          <span class="text-border">·</span>
+          <a
+            href={session.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-accent hover:text-accent-light no-underline"
+          >
+            Full report from Hansard ↗
+          </a>
+        </>
+      )}
+    </div>
+  </header>
+
+  <!-- Attendance -->
+  {attendees.length > 0 && (
+    <section class="mb-10">
+      <details class="group">
+        <summary class="flex cursor-pointer items-center gap-2 font-sans text-sm uppercase tracking-wide text-ink-muted mb-4 list-none">
+          <span>Members ({presentMembers.length} present, {absentMembers.length} absent)</span>
+          <svg
+            class="h-4 w-4 transition-transform group-open:rotate-180"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </summary>
+
+        <div class="bg-surface border border-border rounded-md p-6">
+          <!-- Present -->
+          <div class="mb-6">
+            <h3 class="font-sans text-xs uppercase tracking-wide text-status-passed font-semibold mb-3">
+              Present ({presentMembers.length})
+            </h3>
+            <div class="flex flex-wrap gap-2">
+              {presentMembers.map((member) => (
+                <a
+                  href={`/members/${slugify(member.name, member.id)}`}
+                  class="inline-flex items-center gap-1 bg-status-passed-bg text-status-passed px-3 py-1 rounded-full font-sans text-sm transition-colors hover:bg-green-200 no-underline"
+                >
+                  {member.name}
+                  {member.designation && (
+                    <span class="text-status-passed/60 text-xs">
+                      ({member.designation})
+                    </span>
+                  )}
+                </a>
+              ))}
+            </div>
+          </div>
+
+          <!-- Absent -->
+          {absentMembers.length > 0 && (
+            <div>
+              <h3 class="font-sans text-xs uppercase tracking-wide text-ink-muted font-semibold mb-3">
+                Absent ({absentMembers.length})
+              </h3>
+              <div class="flex flex-wrap gap-2">
+                {absentMembers.map((member) => (
+                  <a
+                    href={`/members/${slugify(member.name, member.id)}`}
+                    class="inline-flex items-center bg-border-light text-ink-muted px-3 py-1 rounded-full font-sans text-sm transition-colors hover:bg-border no-underline"
+                  >
+                    {member.name}
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </details>
+    </section>
+  )}
+
+  <!-- Motions -->
+  {motions.length > 0 && (
+    <section class="mb-10">
+      <h2 class="font-display text-xl text-ink mb-4">
+        Motions <span class="font-sans text-sm text-ink-muted font-normal">({motions.length})</span>
+      </h2>
+      <div class="flex flex-col border-t border-border">
+        {motions.map((section) => (
+          <SectionCard section={section} />
+        ))}
+      </div>
+    </section>
+  )}
+
+  <!-- Bills -->
+  {bills.length > 0 && (
+    <section class="mb-10">
+      <h2 class="font-display text-xl text-ink mb-4">
+        Bills <span class="font-sans text-sm text-ink-muted font-normal">({bills.length})</span>
+      </h2>
+      <div class="flex flex-col border-t border-border">
+        {bills.map((bill) => (
+          <a href={`/bills/${slugify(bill.billTitle, bill.billId)}`} class="group block p-5 border-b border-border transition-colors hover:bg-warm no-underline">
+            <div class="flex flex-wrap items-center gap-2 mb-2">
+              {bill.readingTypes.includes('BI') && (
+                <Tag color="muted">1st Reading</Tag>
+              )}
+              {bill.readingTypes.includes('BP') && (
+                <Tag color="accent">2nd Reading</Tag>
+              )}
+              {bill.ministry && (
+                <Tag color="green">{bill.ministry}</Tag>
+              )}
+            </div>
+            <h3 class="font-display text-lg text-ink leading-snug line-clamp-2 group-hover:text-accent transition-colors">
+              {bill.sectionTitle}
+            </h3>
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
+
+  <!-- Oral Answers -->
+  <section class="mb-10">
+    <h2 class="font-display text-xl text-ink mb-4">
+      Oral Answers <span class="font-sans text-sm text-ink-muted font-normal">({oralAnswers.length})</span>
+    </h2>
+    {oralAnswers.length === 0 ? (
+      <p class="py-8 font-body text-ink-muted">No oral answers in this session</p>
+    ) : (
+      <div class="flex flex-col border-t border-border">
+        {oralAnswers.map((section) => (
+          <SectionCard section={section} />
+        ))}
+      </div>
+    )}
+  </section>
+
+  <!-- Written Answers -->
+  <section class="mb-10">
+    <h2 class="font-display text-xl text-ink mb-4">
+      Written Answers <span class="font-sans text-sm text-ink-muted font-normal">({writtenAnswers.length})</span>
+    </h2>
+    {writtenAnswers.length === 0 ? (
+      <p class="py-8 font-body text-ink-muted">No written answers in this session</p>
+    ) : (
+      <div class="flex flex-col border-t border-border">
+        {writtenAnswers.map((section) => (
+          <SectionCard section={section} />
+        ))}
+      </div>
+    )}
+  </section>
+
+  <!-- Clarifications -->
+  {clarifications.length > 0 && (
+    <section class="mb-10">
+      <h2 class="font-display text-xl text-ink mb-4">
+        Clarifications <span class="font-sans text-sm text-ink-muted font-normal">({clarifications.length})</span>
+      </h2>
+      <div class="flex flex-col border-t border-border">
+        {clarifications.map((section) => (
+          <SectionCard section={section} />
+        ))}
+      </div>
+    </section>
+  )}
+</Layout>

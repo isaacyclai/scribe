@@ -1,0 +1,197 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import SectionLabel from "../../components/SectionLabel.astro";
+import AISummaryCard from "../../components/AISummaryCard.astro";
+import SpeakerPills from "../../components/SpeakerPills.astro";
+import BillReadingStatus from "../../components/BillReadingStatus.astro";
+import Tag from "../../components/Tag.astro";
+import { getBills, getBill, getBillSections } from "../../lib/db";
+import { slugify } from "../../lib/slugify";
+import type { Speaker } from "../../lib/db";
+
+export async function getStaticPaths() {
+  const bills = getBills();
+  return bills.map((bill) => ({
+    params: { slug: slugify(bill.title, bill.id) },
+    props: { id: bill.id },
+  }));
+}
+
+const { id } = Astro.props;
+const bill = getBill(id);
+
+if (!bill) {
+  return Astro.redirect("/bills");
+}
+
+const sections = getBillSections(id!);
+
+// Separate readings
+const firstReadings = sections.filter((s) => s.sectionType === "BI");
+const secondReadings = sections.filter((s) => s.sectionType === "BP");
+
+// Get unique speakers from second readings
+const allSpeakers = secondReadings.flatMap((s) => s.speakers || []);
+const uniqueSpeakers = allSpeakers.filter(
+  (speaker, index, self) =>
+    speaker &&
+    index === self.findIndex((s) => s && s.memberId === speaker.memberId),
+);
+
+// Group unique second reading sessions (for timeline + transcript headers)
+const secondReadingSessions = secondReadings.reduce(
+  (acc, curr) => {
+    if (!acc.find((item) => item.sessionDate === curr.sessionDate)) {
+      acc.push({ sessionDate: curr.sessionDate, sessionId: curr.sessionId });
+    }
+    return acc;
+  },
+  [] as { sessionDate: string; sessionId: string }[],
+);
+
+// Determine bill status from actual data
+const getStatus = (): {
+  label: string;
+  color: "green" | "accent" | "muted";
+} => {
+  if (secondReadings.length > 0)
+    return { label: "2nd Reading", color: "accent" };
+  return { label: "1st Reading", color: "muted" };
+};
+
+const status = getStatus();
+---
+
+<Layout title={bill.title} description={`Bill details: ${bill.title}`}>
+  <a
+    href="/bills"
+    class="inline-flex items-center font-sans text-sm text-accent hover:text-accent-light no-underline mb-8"
+    data-pagefind-ignore
+  >
+    ← Back to Bills
+  </a>
+
+  <article
+    data-pagefind-body
+    data-pagefind-filter="type:bill"
+    data-pagefind-meta={`id:${bill.id}`}
+  >
+    <!-- Header -->
+    <header class="mb-8">
+      <div class="flex flex-wrap items-center gap-2 mb-3" data-pagefind-ignore>
+        <div>
+          <Tag color={status.color}>{status.label}</Tag>
+        </div>
+        {
+          bill.ministry && bill.ministryId && (
+            <a
+              href={`/ministries/${slugify(bill.ministry, bill.ministryId)}`}
+              class="inline-block"
+            >
+              <Tag color="green">{bill.ministry}</Tag>
+            </a>
+          )
+        }
+      </div>
+      <h1
+        class="font-display text-display-md text-ink mb-2 text-balance"
+        data-pagefind-weight="10"
+      >
+        {bill.title}
+      </h1>
+      {
+        bill.ministry && (
+          <span class="hidden" data-pagefind-weight="5">
+            {bill.ministry}
+          </span>
+        )
+      }
+    </header>
+
+    <!-- Bill Summary -->
+    <div class="mb-8" data-pagefind-weight="3">
+      <AISummaryCard
+        title="Bill Summary"
+        content={bill.summary}
+        fallbackMessage="Summary will be generated in a future update."
+      />
+    </div>
+
+    <!-- Reading Timeline -->
+    <div class="mb-8">
+      <BillReadingStatus
+        firstReadingDate={bill.firstReadingDate}
+        firstReadingSessionId={bill.firstReadingSessionId}
+        secondReadingSessions={secondReadingSessions}
+      />
+    </div>
+
+    <!-- Speakers -->
+    {
+      uniqueSpeakers.length > 0 && (
+        <section class="mb-8" data-pagefind-weight="3">
+          <h2 class="font-sans text-xs uppercase tracking-wide text-ink-muted font-semibold mb-4">
+            Members Involved
+          </h2>
+          <SpeakerPills speakers={uniqueSpeakers} />
+        </section>
+      )
+    }
+
+    <!-- Second Reading Transcripts -->
+    {
+      secondReadings.length > 0 && (
+        <section data-pagefind-weight="1">
+          <div
+            class="flex items-center justify-between mb-4 border-t-2 border-ink pt-4"
+            data-pagefind-ignore
+          >
+            <h2 class="font-sans text-xs uppercase tracking-wide text-ink-muted font-semibold">
+              Transcript{secondReadings.length > 1 ? "s" : ""}
+            </h2>
+            {secondReadings[0]?.sourceUrl && (
+              <a
+                href={secondReadings[0].sourceUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="font-sans text-sm text-accent hover:text-accent-light no-underline"
+              >
+                View Original Hansard ↗
+              </a>
+            )}
+          </div>
+
+          {secondReadings.map((section, idx) => (
+            <div class="mb-8">
+              {secondReadings.length > 1 && (
+                <h3 class="font-sans text-sm font-medium text-ink-soft mb-4">
+                  {new Date(section.sessionDate).toLocaleDateString("en-SG", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </h3>
+              )}
+              <div class="transcript-content" set:html={section.contentHtml} />
+              {idx < secondReadings.length - 1 && (
+                <hr class="my-8 border-border" />
+              )}
+            </div>
+          ))}
+        </section>
+      )
+    }
+
+    <!-- No second reading yet -->
+    {
+      secondReadings.length === 0 && (
+        <section class="bg-status-reading-bg border border-status-reading/20 rounded-md p-5">
+          <p class="font-body text-sm italic text-status-reading">
+            This bill has not yet had its second reading. Check back later for
+            debate transcripts.
+          </p>
+        </section>
+      )
+    }
+  </article>
+</Layout>
