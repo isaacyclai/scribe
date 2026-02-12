@@ -207,7 +207,7 @@ const { trendSeries, years } = Astro.props;
     const isNarrow = window.matchMedia("(max-width: 1024px)").matches;
     const margin = {
       top: 30,
-      right: isNarrow ? 24 : 136,
+      right: isNarrow ? 24 : 180,
       bottom: 56,
       left: isMobile ? 62 : 56,
     };
@@ -417,11 +417,11 @@ const { trendSeries, years } = Astro.props;
       endpoint.setAttribute("stroke", "none");
 
       const endLabel = document.createElementNS(ns, "text");
-      endLabel.setAttribute("x", String(width - margin.right + 10));
+      endLabel.setAttribute("x", String(endX + 12));
       endLabel.setAttribute("y", String(endY + 4));
       endLabel.setAttribute("class", "line-end-label");
       endLabel.setAttribute("fill", color);
-      endLabel.textContent = `${s.name} ${fmtCompactMillions(last.total)}`;
+      endLabel.textContent = s.name;
 
       group.appendChild(path);
       group.appendChild(endpoint);
