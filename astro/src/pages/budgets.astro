@@ -48,6 +48,31 @@ function parseCSV(text: string) {
 
 const rows = parseCSV(csvText);
 
+// Use one data version per year so revised values replace estimated ones.
+const estimateTypePriority: Record<string, number> = {
+  Estimated: 1,
+  Revised: 2,
+  Actual: 3,
+};
+
+const preferredEstimateTypeByYear = new Map<number, string>();
+for (const row of rows) {
+  const existing = preferredEstimateTypeByYear.get(row.year);
+  if (!existing) {
+    preferredEstimateTypeByYear.set(row.year, row.estimateType);
+    continue;
+  }
+  const existingPriority = estimateTypePriority[existing] || 0;
+  const rowPriority = estimateTypePriority[row.estimateType] || 0;
+  if (rowPriority > existingPriority) {
+    preferredEstimateTypeByYear.set(row.year, row.estimateType);
+  }
+}
+
+const filteredRows = rows.filter(
+  (row) => preferredEstimateTypeByYear.get(row.year) === row.estimateType,
+);
+
 // ─── Aggregate by year → sector → ministry ───
 const yearMap = new Map<
   number,
@@ -63,7 +88,7 @@ const yearMap = new Map<
   >
 >();
 
-for (const row of rows) {
+for (const row of filteredRows) {
   if (!yearMap.has(row.year)) yearMap.set(row.year, new Map());
   const entries = yearMap.get(row.year)!;
   const key = `${row.sector}|||${row.ministry}`;
