@@ -697,6 +697,10 @@
         text-align: center;
     }
 
+    .nav-bar a[href="/budgets"] {
+        grid-column: 2;
+    }
+
     .main-grid {
         grid-template-columns: 1fr;
     }
