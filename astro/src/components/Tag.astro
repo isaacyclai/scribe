@@ -1,0 +1,26 @@
+---
+interface Props {
+  color?: 'accent' | 'muted' | 'blue' | 'green' | 'amber' | 'purple' | 'indigo';
+  class?: string;
+}
+
+const { color = 'accent', class: className = '' } = Astro.props;
+
+const colorClasses = {
+  accent: 'bg-border-light text-accent',
+  muted: 'bg-border-light text-ink-muted',
+  blue: 'bg-wp-blue-bg text-wp-blue',
+  green: 'bg-status-passed-bg text-status-passed',
+  amber: 'bg-status-reading-bg text-status-reading',
+  purple: 'bg-purple-50 text-purple-700',
+  indigo: 'bg-indigo-50 text-indigo-700',
+};
+---
+
+<span class:list={[
+  'inline-block font-sans text-label-sm uppercase tracking-wider px-2 py-0.5 rounded',
+  colorClasses[color],
+  className
+]}>
+  <slot />
+</span>

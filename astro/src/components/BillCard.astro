@@ -1,0 +1,53 @@
+---
+import type { Bill } from "../lib/db";
+import Tag from './Tag.astro';
+import { slugify } from '../lib/slugify';
+
+interface Props {
+  bill: Bill;
+}
+
+const { bill } = Astro.props;
+
+const formatDate = (dateStr: string | null) => {
+  if (!dateStr) return null;
+  return new Date(dateStr).toLocaleDateString("en-SG", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+};
+
+// Determine bill status based on reading data
+const getStatus = (bill: Bill): { label: string; color: 'green' | 'accent' | 'muted' } => {
+  if (bill.hasSecondReading) return { label: '2nd Reading', color: 'accent' };
+  return { label: '1st Reading', color: 'muted' };
+};
+
+const status = getStatus(bill);
+---
+
+<a
+  href={`/bills/${slugify(bill.title, bill.id)}`}
+  class="group block p-5 border-b border-border transition-colors hover:bg-warm cursor-pointer"
+  data-pagefind-meta={`id:${bill.id}`}
+>
+  <div class="flex flex-wrap items-center gap-2 mb-2">
+    <Tag color={status.color}>{status.label}</Tag>
+    {bill.firstReadingDate && (
+      <span class="font-sans text-xs text-ink-muted">
+        {formatDate(bill.firstReadingDate)}
+      </span>
+    )}
+  </div>
+  
+  <h3 class="font-display text-lg text-ink leading-snug mb-2 group-hover:text-accent transition-colors">
+    {bill.title}
+  </h3>
+  
+  {bill.ministry && (
+    <div class="font-sans text-sm text-ink-muted">
+      {bill.ministry}
+    </div>
+  )}
+</a>

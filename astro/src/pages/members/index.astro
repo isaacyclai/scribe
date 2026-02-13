@@ -1,0 +1,94 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import SectionLabel from "../../components/SectionLabel.astro";
+import MemberCard from "../../components/MemberCard.astro";
+import SearchFilter from "../../components/SearchFilter.astro";
+import { getMembersWithInfo, getMemberCount } from "../../lib/db";
+
+const members = getMembersWithInfo();
+const STAGGER_LIMIT = 12;
+const totalCount = getMemberCount();
+---
+
+<Layout
+  title="Members of Parliament"
+  description="Browse Singapore Members of Parliament"
+>
+  <SectionLabel>Members of Parliament</SectionLabel>
+
+  <h1 class="font-display text-display-lg text-ink mb-4">
+    Your Representatives
+  </h1>
+
+  <div
+    class="font-body text-base text-ink-soft leading-relaxed max-w-[72ch] mb-8 space-y-3 text-pretty"
+  >
+    <p>
+      Browse Members of Parliament, see their activity in the House, and explore
+      the questions, motions, and bills they've been involved in. Individual MP
+      pages also include AI-generated summaries of their recent contributions.
+    </p>
+    <p>
+      In Singapore, there are three types of MPs: <strong class="text-ink"
+        >elected members</strong
+      > who represent geographical constituencies, <strong class="text-ink"
+        >Non-Constituency Members (NCMPs)</strong
+      > from opposition parties who received the highest vote share among unelected
+      candidates, and <strong class="text-ink">Nominated Members (NMPs)</strong> appointed
+      by the President to provide non-partisan views.
+    </p>
+  </div>
+
+  <div class="mb-10">
+    <p
+      class="font-body text-base text-ink-soft leading-relaxed max-w-[72ch] mb-4 text-pretty"
+    >
+      Don't know who your MP is? Enter your postal code in the map below to find
+      out.
+    </p>
+    <div class="w-full overflow-hidden">
+      <iframe
+        title="2025 General Election Results Map"
+        src="https://elections.data.gov.sg/en/map?isScrollable=true&primaryColor=%236253E8&view=Winning%20margin&lang=en&year=2025&constituenciesView=all"
+        class="h-[980px] w-full border-none sm:h-[740px] md:h-[620px]"></iframe>
+    </div>
+  </div>
+
+  <SearchFilter
+    containerId="members-list"
+    itemSelector=".member-item"
+    contentType="member"
+    placeholder="Search by name, constituency, or designation..."
+  />
+
+  <p
+    class="font-sans text-sm text-ink-muted mb-6"
+    data-search-count="members-list"
+  >
+    Showing {members.length} of {totalCount} members
+  </p>
+
+  <div id="members-list" class="grid gap-4 sm:grid-cols-2">
+    {
+      members.length === 0 ? (
+        <p class="col-span-full py-12 text-center font-body text-ink-muted">
+          No members found
+        </p>
+      ) : (
+        members.map((member, i) => {
+          const isStaggered = i < STAGGER_LIMIT;
+          return (
+            <div
+              class={`member-item h-full${isStaggered ? " animate-fade-up" : ""}`}
+              style={
+                isStaggered ? `animation-delay: ${0.1 + i * 0.03}s` : undefined
+              }
+            >
+              <MemberCard member={member} />
+            </div>
+          );
+        })
+      )
+    }
+  </div>
+</Layout>

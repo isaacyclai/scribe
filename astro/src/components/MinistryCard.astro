@@ -1,0 +1,30 @@
+---
+import type { Ministry } from '../lib/db';
+import Tag from './Tag.astro';
+import { slugify } from '../lib/slugify';
+
+interface Props {
+  ministry: Ministry;
+}
+
+const { ministry } = Astro.props;
+---
+
+<a
+  href={`/ministries/${slugify(ministry.name, ministry.id)}`}
+  class="group block h-full bg-surface border border-border rounded-md p-5 transition-colors hover:bg-warm hover:border-ink-muted no-underline"
+>
+  <div class="flex h-full flex-col">
+    <div class="flex items-center gap-2 mb-2">
+      <Tag color="green">{ministry.acronym}</Tag>
+    </div>
+    <h3 class="font-display text-lg text-ink mb-2 group-hover:text-accent transition-colors">
+      {ministry.name}
+    </h3>
+    {ministry.sectionCount !== undefined && ministry.sectionCount > 0 && (
+      <p class="mt-auto font-sans text-xs text-ink-muted">
+        {ministry.sectionCount} sections
+      </p>
+    )}
+  </div>
+</a>
