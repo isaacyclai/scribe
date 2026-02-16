@@ -1,0 +1,180 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import SectionLabel from "../../components/SectionLabel.astro";
+import QuestionCard from "../../components/QuestionCard.astro";
+import BillCard from "../../components/BillCard.astro";
+import Pagination from "../../components/Pagination.astro";
+import Tag from "../../components/Tag.astro";
+import {
+  getMinistries,
+  getMinistry,
+  getMinistrySections,
+  getMinistryBills,
+} from "../../lib/db";
+import { slugify } from "../../lib/slugify";
+
+export async function getStaticPaths() {
+  const ministries = getMinistries();
+  return ministries.map((ministry) => ({
+    params: { slug: slugify(ministry.name, ministry.id) },
+    props: { id: ministry.id },
+  }));
+}
+
+const { id } = Astro.props;
+const ministry = getMinistry(id);
+
+if (!ministry) {
+  return Astro.redirect("/ministries");
+}
+
+const sections = getMinistrySections(id);
+const bills = getMinistryBills(id);
+
+// Categorize sections
+const questions = sections.filter((s) =>
+  ["OA", "WA", "WANA"].includes(s.sectionType),
+);
+const motions = sections.filter(
+  (s) => s.category === "motion" || s.category === "adjournment_motion",
+);
+const statements = sections.filter(
+  (s) => s.sectionType === "OS" || s.sectionType === "WS",
+);
+---
+
+<Layout
+  title={ministry.name}
+  description={`Parliamentary activities for ${ministry.name}`}
+>
+  <a
+    href="/ministries"
+    class="inline-flex items-center font-sans text-sm text-accent hover:text-accent-light no-underline mb-8"
+  >
+    ← Back to Ministries
+  </a>
+
+  <header class="mb-10">
+    <div class="flex items-center gap-3 mb-3">
+      <Tag color="green" class="text-sm px-0 py-1">{ministry.acronym}</Tag>
+    </div>
+    <h1 class="font-display text-display-md text-ink mb-2">
+      {ministry.name}
+    </h1>
+    <p class="font-sans text-sm text-ink-muted">
+      {ministry.sectionCount} total sections
+    </p>
+  </header>
+
+  <!-- Bills -->
+  {
+    bills.length > 0 && (
+      <section class="mb-10">
+        <h2 class="font-display text-xl text-ink mb-4">
+          Bills{" "}
+          <span class="font-sans text-sm text-ink-muted font-normal">
+            ({bills.length})
+          </span>
+        </h2>
+        <div id="bills-list" class="flex flex-col border-t border-border">
+          {bills.map((bill) => (
+            <div class="bill-item">
+              <BillCard bill={bill} />
+            </div>
+          ))}
+        </div>
+        <Pagination
+          containerId="bills-list"
+          itemSelector=".bill-item"
+          itemsPerPage={10}
+        />
+      </section>
+    )
+  }
+
+  <!-- Motions -->
+  {
+    motions.length > 0 && (
+      <section class="mb-10">
+        <h2 class="font-display text-xl text-ink mb-4">
+          Motions{" "}
+          <span class="font-sans text-sm text-ink-muted font-normal">
+            ({motions.length})
+          </span>
+        </h2>
+        <div id="motions-list" class="flex flex-col border-t border-border">
+          {motions.map((section) => (
+            <div class="motion-item">
+              <QuestionCard section={section} />
+            </div>
+          ))}
+        </div>
+        <Pagination
+          containerId="motions-list"
+          itemSelector=".motion-item"
+          itemsPerPage={10}
+        />
+      </section>
+    )
+  }
+
+  <!-- Questions -->
+  {
+    questions.length > 0 && (
+      <section class="mb-10">
+        <h2 class="font-display text-xl text-ink mb-4">
+          Questions{" "}
+          <span class="font-sans text-sm text-ink-muted font-normal">
+            ({questions.length})
+          </span>
+        </h2>
+        <div id="questions-list" class="flex flex-col border-t border-border">
+          {questions.map((section) => (
+            <div class="question-item">
+              <QuestionCard section={section} />
+            </div>
+          ))}
+        </div>
+        <Pagination
+          containerId="questions-list"
+          itemSelector=".question-item"
+          itemsPerPage={10}
+        />
+      </section>
+    )
+  }
+
+  <!-- Statements -->
+  {
+    statements.length > 0 && (
+      <section class="mb-10">
+        <h2 class="font-display text-xl text-ink mb-4">
+          Statements{" "}
+          <span class="font-sans text-sm text-ink-muted font-normal">
+            ({statements.length})
+          </span>
+        </h2>
+        <div id="statements-list" class="flex flex-col border-t border-border">
+          {statements.map((section) => (
+            <div class="statement-item">
+              <QuestionCard section={section} />
+            </div>
+          ))}
+        </div>
+        <Pagination
+          containerId="statements-list"
+          itemSelector=".statement-item"
+          itemsPerPage={10}
+        />
+      </section>
+    )
+  }
+
+  {
+    sections.length === 0 && bills.length === 0 && (
+      <p class="py-12 text-center font-body text-ink-muted">
+        No parliamentary activities found for this ministry.
+      </p>
+    )
+  }
+</Layout>

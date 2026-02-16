@@ -1,0 +1,400 @@
+---
+import NewspaperLayout from "../layouts/NewspaperLayout.astro";
+import {
+  getStats,
+  getLatestSession,
+  getSittingsThisYear,
+  getRecentBillReadings,
+  getBillReadingsFromLastSitting,
+  getLatestQuestion,
+  getRecentMotions,
+  getQuestionCount,
+  getMotionCount,
+} from "../lib/db";
+import { slugify } from "../lib/slugify";
+
+const stats = getStats();
+const latestSession = getLatestSession();
+const sittingsThisYear = getSittingsThisYear();
+const recentBillReadings = getRecentBillReadings(3);
+const billReadingsFromLastSitting = getBillReadingsFromLastSitting();
+const latestQuestion = getLatestQuestion();
+const recentMotions = getRecentMotions(2);
+const questionCount = getQuestionCount();
+const motionCount = getMotionCount();
+
+// Format date for masthead
+const today = new Date();
+const dateFormatter = new Intl.DateTimeFormat("en-SG", {
+  weekday: "long",
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+});
+const formattedDate = dateFormatter.format(today);
+
+// Format session date
+const formatSessionDate = (dateStr: string) => {
+  const date = new Date(dateStr);
+  return new Intl.DateTimeFormat("en-SG", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }).format(date);
+};
+
+// Ordinal suffix helper (1st, 2nd, 3rd, 15th, etc.)
+const ordinal = (n: number) => {
+  const s = ["th", "st", "nd", "rd"];
+  const v = n % 100;
+  return n + (s[(v - 20) % 10] || s[v] || s[0]);
+};
+
+// Count bills from the most recent sitting
+const recentBillCount = billReadingsFromLastSitting.length;
+
+// Get reading type label
+const getReadingLabel = (sectionType: string) => {
+  switch (sectionType) {
+    case "BI":
+      return "Introduction";
+    case "B1":
+      return "First Reading";
+    case "B2":
+      return "Second Reading";
+    case "BC":
+      return "Committee";
+    case "B3":
+      return "Third Reading";
+    case "BP":
+      return "Passed";
+    default:
+      return sectionType;
+  }
+};
+
+// Navigation links
+const navLinks = [
+  { href: "/sessions", label: "Sittings" },
+  { href: "/bills", label: "Bills" },
+  { href: "/questions", label: "Questions" },
+  { href: "/motions", label: "Motions" },
+  { href: "/members", label: "MPs" },
+  { href: "/ministries", label: "Ministries" },
+  { href: "/budgets", label: "Budgets" },
+];
+---
+
+<NewspaperLayout
+  title="Home"
+  description="Scribe - Singapore Parliament proceedings made accessible"
+>
+  <div class="page">
+    <!-- Masthead -->
+    <header class="masthead">
+      <div class="flex flex-col items-center md:items-start gap-0.5">
+        <span class="masthead-location"><strong>Singapore</strong></span>
+        <span class="masthead-date">{formattedDate}</span>
+      </div>
+
+      <div class="text-center">
+        <h1 class="masthead-title">Scribe</h1>
+        <p class="masthead-tagline">Singapore Parliament &middot; Hansard</p>
+      </div>
+
+      <div class="flex flex-col items-center md:items-end gap-0.5">
+        {
+          latestSession && (
+            <>
+              <span class="masthead-session">
+                {ordinal(latestSession.parliament)} Parliament, {ordinal(latestSession.sessionNo)} Session
+              </span>
+              <span class="status-indicator">
+                <span class="status-dot" />
+                Last sitting: {formatSessionDate(latestSession.date)}
+              </span>
+            </>
+          )
+        }
+      </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="nav-bar">
+      {navLinks.map((link) => <a href={link.href}>{link.label}</a>)}
+    </nav>
+
+    <!-- Main content grid -->
+    <main class="main-grid">
+      <!-- Left Column -->
+      <div class="column column-left flex flex-col gap-6">
+        <a href="/bills" class="section-card">
+          <div class="section-card-header">
+            <span class="section-card-title">Bills</span>
+            {
+              recentBillCount > 0 && (
+                <span class="section-card-badge">{recentBillCount} Recent</span>
+              )
+            }
+          </div>
+          <div class="section-card-count">{stats.billCount}</div>
+          <p class="section-card-description">
+            What legislation is being debated and passed?
+          </p>
+        </a>
+
+        <div class="section-divider"></div>
+
+        <a href="/questions" class="section-card">
+          <div class="section-card-header">
+            <span class="section-card-title">Questions</span>
+          </div>
+          <div class="section-card-count">{questionCount.toLocaleString()}</div>
+          <p class="section-card-description">
+            What tough questions are being asked of Ministers?
+          </p>
+        </a>
+
+        <div class="section-divider"></div>
+
+        {
+          latestQuestion && (
+            <a
+              href={`/questions/${slugify(latestQuestion.sectionTitle, latestQuestion.id)}`}
+              class="featured-item block no-underline text-inherit"
+            >
+              <span class="featured-label">Latest Question</span>
+              <h3 class="featured-title">{latestQuestion.sectionTitle}</h3>
+              <span class="featured-meta">
+                {latestQuestion.askerName || "MP"} &middot;{" "}
+                {formatSessionDate(latestQuestion.sessionDate)}
+              </span>
+            </a>
+          )
+        }
+      </div>
+
+      <!-- Center Column (Hero) -->
+      <div class="column column-center hero-center">
+        <span class="hero-label">The Parliamentary Record</span>
+        <h2 class="hero-headline">
+          Making Parliament<br />
+          <em>accessible</em> for all
+        </h2>
+        <p class="hero-description">
+          Scribe transforms Singapore's official Hansard into a clean,
+          searchable, and readable format&mdash;so you can understand what's
+          happening in Parliament without wading through walls of text.
+        </p>
+        <div class="hero-actions">
+          <a href="/bills" class="btn-primary">Browse Bills</a>
+          <a href="/members" class="btn-secondary">Find Your MP</a>
+        </div>
+      </div>
+
+      <!-- Right Column -->
+      <div class="column column-right flex flex-col gap-6">
+        <a href="/members" class="section-card">
+          <div class="section-card-header">
+            <span class="section-card-title">MPs</span>
+          </div>
+          <div class="section-card-count">{stats.memberCount}</div>
+          <p class="section-card-description">
+            Who are your representatives and what do they do?
+          </p>
+        </a>
+
+        <div class="section-divider"></div>
+
+        <a href="/motions" class="section-card">
+          <div class="section-card-header">
+            <span class="section-card-title">Motions</span>
+            {
+              recentMotions.length > 0 && (
+                <span class="section-card-badge">Recent</span>
+              )
+            }
+          </div>
+          <div class="section-card-count">{motionCount}</div>
+          <p class="section-card-description">
+            What issues are being formally raised for debate?
+          </p>
+        </a>
+
+        <div class="section-divider"></div>
+
+        {
+          recentBillReadings[0] && (
+            <a
+              href={`/bills/${slugify(recentBillReadings[0].billTitle, recentBillReadings[0].billId)}`}
+              class="featured-item block no-underline text-inherit"
+            >
+              <span class="featured-label">Recent Bill</span>
+              <h3 class="featured-title">{recentBillReadings[0].billTitle}</h3>
+              <span class="featured-meta">
+                {getReadingLabel(recentBillReadings[0].sectionType)} &middot;{" "}
+                {formatSessionDate(recentBillReadings[0].sessionDate)}
+              </span>
+            </a>
+          )
+        }
+      </div>
+    </main>
+
+    <!-- Stats row -->
+    <div class="stats-row">
+      <div class="stat-item">
+        <div class="stat-number">{sittingsThisYear}</div>
+        <div class="stat-label">Sittings This Year</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number">{stats.memberCount}</div>
+        <div class="stat-label">Members of Parliament</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number">{stats.billCount}</div>
+        <div class="stat-label">Bills in Session</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number">{questionCount.toLocaleString()}</div>
+        <div class="stat-label">Questions Filed</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ticker (full width) -->
+  <div class="ticker-container">
+    <div class="ticker">
+      <div class="ticker-content">
+        {
+          recentBillReadings.map((bill) => (
+            <>
+              <div class="ticker-item">
+                <span class="ticker-label">
+                  {getReadingLabel(bill.sectionType)}
+                </span>
+                <a href={`/bills/${slugify(bill.billTitle, bill.billId)}`}>{bill.billTitle}</a>
+              </div>
+              <span class="ticker-divider">&bull;</span>
+            </>
+          ))
+        }
+        {
+          latestQuestion && (
+            <>
+              <div class="ticker-item">
+                <span class="ticker-label">Question</span>
+                <a href={`/questions/${slugify(latestQuestion.sectionTitle, latestQuestion.id)}`}>
+                  {latestQuestion.sectionTitle.slice(0, 60)}
+                  {latestQuestion.sectionTitle.length > 60 ? "..." : ""}
+                </a>
+              </div>
+              <span class="ticker-divider">&bull;</span>
+            </>
+          )
+        }
+        {
+          recentMotions[0] && (
+            <>
+              <div class="ticker-item">
+                <span class="ticker-label">Motion</span>
+                <a href={`/questions/${slugify(recentMotions[0].sectionTitle, recentMotions[0].id)}`}>
+                  {recentMotions[0].sectionTitle.slice(0, 50)}
+                  {recentMotions[0].sectionTitle.length > 50 ? "..." : ""}
+                </a>
+              </div>
+              <span class="ticker-divider">&bull;</span>
+            </>
+          )
+        }
+        {
+          latestSession && (
+            <div class="ticker-item">
+              <span class="ticker-label">Sitting</span>
+              <a href={`/sessions/${slugify(latestSession.date, latestSession.id)}`}>
+                Latest sitting: {formatSessionDate(latestSession.date)}
+              </a>
+            </div>
+          )
+        }
+      </div>
+      <!-- Duplicate for seamless loop -->
+      <div class="ticker-content" aria-hidden="true">
+        {
+          recentBillReadings.map((bill) => (
+            <>
+              <div class="ticker-item">
+                <span class="ticker-label">
+                  {getReadingLabel(bill.sectionType)}
+                </span>
+                <a href={`/bills/${slugify(bill.billTitle, bill.billId)}`}>{bill.billTitle}</a>
+              </div>
+              <span class="ticker-divider">&bull;</span>
+            </>
+          ))
+        }
+        {
+          latestQuestion && (
+            <>
+              <div class="ticker-item">
+                <span class="ticker-label">Question</span>
+                <a href={`/questions/${slugify(latestQuestion.sectionTitle, latestQuestion.id)}`}>
+                  {latestQuestion.sectionTitle.slice(0, 60)}
+                  {latestQuestion.sectionTitle.length > 60 ? "..." : ""}
+                </a>
+              </div>
+              <span class="ticker-divider">&bull;</span>
+            </>
+          )
+        }
+        {
+          recentMotions[0] && (
+            <>
+              <div class="ticker-item">
+                <span class="ticker-label">Motion</span>
+                <a href={`/questions/${slugify(recentMotions[0].sectionTitle, recentMotions[0].id)}`}>
+                  {recentMotions[0].sectionTitle.slice(0, 50)}
+                  {recentMotions[0].sectionTitle.length > 50 ? "..." : ""}
+                </a>
+              </div>
+              <span class="ticker-divider">&bull;</span>
+            </>
+          )
+        }
+        {
+          latestSession && (
+            <div class="ticker-item">
+              <span class="ticker-label">Sitting</span>
+              <a href={`/sessions/${slugify(latestSession.date, latestSession.id)}`}>
+                Latest sitting: {formatSessionDate(latestSession.date)}
+              </a>
+            </div>
+          )
+        }
+      </div>
+    </div>
+  </div>
+
+  <div class="page">
+    <!-- Footer -->
+    <footer class="newspaper-footer">
+      <div class="footer-left flex items-center gap-4">
+        <span class="footer-logo">Scribe</span>
+        <span class="footer-copyright">An independent project</span>
+      </div>
+      <div class="footer-links">
+        <a href="/about">About</a>
+        <a
+          href="https://sprs.parl.gov.sg/search/#/home"
+          target="_blank"
+          rel="noopener noreferrer">Data Source</a
+        >
+        <a
+          href="https://github.com/isaacyclai/scribe"
+          target="_blank"
+          rel="noopener noreferrer">GitHub</a
+        >
+      </div>
+    </footer>
+  </div>
+</NewspaperLayout>

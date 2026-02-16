@@ -1,0 +1,54 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import SectionLabel from "../../components/SectionLabel.astro";
+import PaginatedList from "../../components/islands/PaginatedList";
+import { getMotions, getMotionCount } from "../../lib/db";
+import type { ListItem } from "../../lib/types";
+
+const PAGE_SIZE = 20;
+const totalCount = getMotionCount();
+const motions = getMotions(PAGE_SIZE, 0);
+
+// Transform to match the ListItem interface
+const initialItems: ListItem[] = motions.map((m) => ({
+  id: m.id,
+  title: m.sectionTitle,
+  date: m.sessionDate,
+  type: m.sectionType,
+  category: m.category || undefined,
+  ministry: m.ministry || undefined,
+  speakers: m.speakers?.map((s) => s.name) || [],
+  snippet: m.contentPlain?.substring(0, 150),
+}));
+---
+
+<Layout title="Motions" description="Browse Singapore Parliament motions">
+  <SectionLabel>Parliamentary Proceedings</SectionLabel>
+
+  <h1 class="font-display text-display-lg text-ink mb-4">Motions</h1>
+
+  <div
+    class="font-body text-base text-ink-soft leading-relaxed max-w-[72ch] mb-8 space-y-3 text-pretty"
+  >
+    <p>
+      Motions are formal proposals put before Parliament for debate and
+      decision, including adjournment motions and ministerial statements. There
+      is typically one adjournment motion at the end of each sitting, which can
+      be moved by any MP.
+    </p>
+    <p>
+      Note that some very short motions (such as ones to ask for an extension of
+      time) may not be included in this list.
+    </p>
+  </div>
+
+  <PaginatedList
+    client:visible
+    contentType="motion"
+    dataUrl="/data/motions.json"
+    totalCount={totalCount}
+    pageSize={PAGE_SIZE}
+    placeholder="Search motions by title, speaker, or content..."
+    initialItems={initialItems}
+  />
+</Layout>
