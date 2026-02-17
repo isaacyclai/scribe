@@ -68,8 +68,8 @@ def detect_ministry_from_content(content_plain):
     if not content_plain:
         return None
 
-    # Look in the first 500 chars (the question preamble)
-    preamble = content_plain[:500]
+    # Look in the first 1000 chars (the question preamble)
+    preamble = content_plain[:1000]
 
     for designation, acronym in DESIGNATION_TO_MINISTRY.items():
         if designation in preamble:
