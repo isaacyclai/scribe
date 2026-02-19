@@ -153,6 +153,14 @@ const sittingInfo = section.sittingDate
         )
       }
       {
+        section.ministry && (
+          <span
+            class="hidden"
+            data-pagefind-filter={`ministry:${section.ministry}`}
+          />
+        )
+      }
+      {
         section.speakers &&
           section.speakers.map((speaker) => (
             <span

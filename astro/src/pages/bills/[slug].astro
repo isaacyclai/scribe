@@ -107,6 +107,14 @@ const status = getStatus();
         )
       }
       {
+        bill.ministry && (
+          <span
+            class="hidden"
+            data-pagefind-filter={`ministry:${bill.ministry}`}
+          />
+        )
+      }
+      {
         uniqueSpeakers.map((speaker) => (
           <span
             class="hidden"
