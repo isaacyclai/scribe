@@ -74,6 +74,7 @@ def find_or_create_member(name: str) -> str:
     conn = get_connection()
     cursor = conn.cursor()
 
+    name = name.strip()
     # Try to find existing
     cursor.execute('SELECT id FROM members WHERE name = ?', (name,))
     row = cursor.fetchone()
@@ -110,6 +111,7 @@ def find_or_create_bill(title: str, ministry_id: str = None,
     conn = get_connection()
     cursor = conn.cursor()
 
+    title = title.strip()
     # Try to find existing by title
     cursor.execute(
         'SELECT id, first_reading_date, ministry_id FROM bills WHERE title = ?',
