@@ -23,16 +23,26 @@ const categoryLabels: Record<string, string> = {
   clarification: "Clarification",
 };
 const hasCategory = section.category && categoryLabels[section.category];
+
+// Route based on category
+const routePrefix =
+  section.category === "motion" || section.category === "adjournment_motion"
+    ? "/motions"
+    : section.category === "clarification"
+      ? "/clarifications"
+      : "/questions";
 ---
 
 <a
-  href={`/questions/${slugify(section.sectionTitle, section.id)}`}
+  href={`${routePrefix}/${slugify(section.sectionTitle, section.id)}`}
   class="group block p-5 border-b border-border transition-colors hover:bg-warm cursor-pointer"
 >
   <div class="flex flex-wrap items-center gap-2 mb-2">
     {
       hasCategory ? (
-        <Tag color="indigo">{categoryLabels[section.category!]}</Tag>
+        <Tag color={section.category === "clarification" ? "amber" : "indigo"}>
+          {categoryLabels[section.category!]}
+        </Tag>
       ) : (
         <TypeBadge type={section.sectionType} />
       )

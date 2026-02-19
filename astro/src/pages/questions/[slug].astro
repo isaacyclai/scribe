@@ -5,13 +5,13 @@ import AISummaryCard from "../../components/AISummaryCard.astro";
 import SpeakerPills from "../../components/SpeakerPills.astro";
 import TypeBadge from "../../components/TypeBadge.astro";
 import Tag from "../../components/Tag.astro";
-import { getAllSections, getSection } from "../../lib/db";
+import { getQuestions, getSection } from "../../lib/db";
 import { slugify } from "../../lib/slugify";
 
 export async function getStaticPaths() {
-  // Get all sections for static paths (since SectionCard links to this page)
-  const allSections = getAllSections();
-  return allSections.map((section) => ({
+  // Only generate paths for actual questions (not motions or clarifications)
+  const questions = getQuestions();
+  return questions.map((section) => ({
     params: { slug: slugify(section.sectionTitle, section.id) },
     props: { id: section.id },
   }));
@@ -33,9 +33,6 @@ const typeLabels: Record<string, string> = {
 };
 
 const categoryLabels: Record<string, string> = {
-  motion: "Motion",
-  adjournment_motion: "Adjournment Motion",
-  clarification: "Clarification",
   statement: "Statement",
 };
 
@@ -52,11 +49,8 @@ const formattedDate = section.sittingDate
     })
   : null;
 
-// Determine back link based on category
-const isMotion =
-  section.category === "motion" || section.category === "adjournment_motion";
-const backLink = isMotion ? "/motions" : "/questions";
-const backLabel = isMotion ? "Motions" : "Questions";
+const backLink = "/questions";
+const backLabel = "Questions";
 
 // Get sitting info for breadcrumb
 const sittingInfo = section.sittingDate
@@ -95,7 +89,7 @@ const sittingInfo = section.sittingDate
   <article
     class="max-w-prose"
     data-pagefind-body
-    data-pagefind-filter={`type:${isMotion ? "motion" : "question"}`}
+    data-pagefind-filter="type:question"
     data-pagefind-meta={`id:${section.id}`}
   >
     <!-- Header -->

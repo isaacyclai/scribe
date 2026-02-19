@@ -38,6 +38,7 @@ const questions = sections.filter((s) =>
 const motions = sections.filter(
   (s) => s.category === "motion" || s.category === "adjournment_motion",
 );
+const clarifications = sections.filter((s) => s.category === "clarification");
 ---
 
 <Layout
@@ -160,6 +161,35 @@ const motions = sections.filter(
     )
   }
 
+  <!-- Clarifications -->
+  {
+    clarifications.length > 0 && (
+      <section class="mb-10">
+        <h2 class="font-display text-xl text-ink mb-4">
+          Clarifications{" "}
+          <span class="font-sans text-sm text-ink-muted font-normal">
+            ({clarifications.length})
+          </span>
+        </h2>
+        <div
+          id="clarifications-list"
+          class="flex flex-col border-t border-border"
+        >
+          {clarifications.map((section) => (
+            <div class="clarification-item">
+              <QuestionCard section={section} />
+            </div>
+          ))}
+        </div>
+        <Pagination
+          containerId="clarifications-list"
+          itemSelector=".clarification-item"
+          itemsPerPage={10}
+        />
+      </section>
+    )
+  }
+
   <!-- Questions -->
   {
     questions.length > 0 && (
@@ -252,6 +282,7 @@ const motions = sections.filter(
       const sectionConfigs = [
         { id: "bills-list", selector: ".bill-item" },
         { id: "motions-list", selector: ".motion-item" },
+        { id: "clarifications-list", selector: ".clarification-item" },
         { id: "questions-list", selector: ".question-item" },
       ]
         .map((s) => {

@@ -529,6 +529,77 @@ export function getMotionCount(): number {
   return result.count;
 }
 
+// Clarifications - sections categorized as clarification
+export function getClarifications(limit?: number, offset?: number): Section[] {
+  const sql = `
+    SELECT
+      sec.id,
+      sec.sitting_id as sittingId,
+      s.date as sittingDate,
+      s.sitting_no as sittingNo,
+      sec.section_type as sectionType,
+      sec.section_title as sectionTitle,
+      sec.content_plain as contentPlain,
+      sec.section_order as sectionOrder,
+      sec.category,
+      sec.source_url as sourceUrl,
+      sec.summary,
+      m.name as ministry,
+      sec.ministry_id as ministryId
+    FROM sections sec
+    JOIN sittings s ON sec.sitting_id = s.id
+    LEFT JOIN ministries m ON sec.ministry_id = m.id
+    WHERE sec.category = 'clarification'
+    ORDER BY s.date DESC, sec.section_order ASC
+    ${limit ? `LIMIT ${limit}` : ''}
+    ${offset ? `OFFSET ${offset}` : ''}
+  `;
+  const sections = db.prepare(sql).all() as Section[];
+
+  // Get speakers for each section
+  if (sections.length > 0) {
+    const speakerSql = `
+      SELECT
+        ss.section_id as sectionId,
+        ss.member_id as memberId,
+        m.name,
+        ss.constituency,
+        ss.designation
+      FROM section_speakers ss
+      JOIN members m ON ss.member_id = m.id
+      WHERE ss.section_id IN (${sections.map(() => '?').join(',')})
+    `;
+    const speakers = db.prepare(speakerSql).all(...sections.map(s => s.id)) as (Speaker & { sectionId: string })[];
+    const speakerMap = new Map<string, Speaker[]>();
+
+    for (const speaker of speakers) {
+      if (!speakerMap.has(speaker.sectionId)) {
+        speakerMap.set(speaker.sectionId, []);
+      }
+      speakerMap.get(speaker.sectionId)!.push({
+        memberId: speaker.memberId,
+        name: speaker.name,
+        constituency: speaker.constituency,
+        designation: speaker.designation,
+      });
+    }
+
+    for (const section of sections) {
+      section.speakers = speakerMap.get(section.id) || [];
+    }
+  }
+
+  return sections;
+}
+
+export function getClarificationCount(): number {
+  const result = db.prepare(`
+    SELECT COUNT(*) as count FROM sections
+    WHERE category = 'clarification'
+  `).get() as { count: number };
+  return result.count;
+}
+
 // Get a single section with full content
 export function getSection(id: string): Section | undefined {
   const sql = `

@@ -30,7 +30,7 @@ interface Pagefind {
 }
 
 interface Props {
-  contentType: "question" | "bill" | "motion" | "sitting";
+  contentType: "question" | "bill" | "motion" | "sitting" | "clarification";
   dataUrl: string;
   totalCount: number;
   pageSize?: number;
@@ -503,6 +503,7 @@ export default function PaginatedList({
         return <SittingCard item={item} />;
       case "question":
       case "motion":
+      case "clarification":
       default:
         return <QuestionCard item={item} />;
     }
