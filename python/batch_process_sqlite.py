@@ -118,6 +118,11 @@ def process_section(sitting_id, idx, section, date_str):
     if section.get("category") == "adjournment_motion":
         ministry_id = None
         ministry_acronym = None
+    elif section.get("category") == "motion":
+        ministry_acronym = detect_ministry_from_content(section.get("content_plain", ""))
+        ministry_id = (
+            find_ministry_by_acronym(ministry_acronym) if ministry_acronym else None
+        )
     else:
         ministry_acronym = detect_ministry(section)
         ministry_id = (
